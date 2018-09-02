@@ -2,7 +2,7 @@ function api(action, params, callback) {
     params = $.extend(params, { action: action });
 
     var ret = $.ajax({
-        url: 'api.php',
+        url: 'legacy/',
         dataType: 'json',
         aysnc: true,
         data: params, 

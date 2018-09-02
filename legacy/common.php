@@ -18,8 +18,7 @@ if(php_sapi_name() !== 'cli') {
 	//Auth::doAuth();
 }
 
-require 'lib/rb.php';
-require 'vendor/autoload.php';
+require __DIR__.'/lib/rb.php';
 
 $config = Config::get();
 

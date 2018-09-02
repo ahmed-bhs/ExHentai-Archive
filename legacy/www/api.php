@@ -1,6 +1,6 @@
 <?php
 
-chdir('../');
+chdir(__DIR__.'/../');
 require 'common.php';
 
 $api = new ApiHandler();
