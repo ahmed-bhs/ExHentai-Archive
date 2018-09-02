@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-cd /var/www/html/ && php TaskRunner.php Audit
+cd /var/www/html/legacy && php TaskRunner.php Audit

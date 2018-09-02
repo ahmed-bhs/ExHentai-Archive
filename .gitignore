@@ -15,3 +15,11 @@ phpMyAdmin/
 .idea/
 docker-compose.override.yml
 /vendor/
+
+
+###> symfony/framework-bundle ###
+/.env
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
