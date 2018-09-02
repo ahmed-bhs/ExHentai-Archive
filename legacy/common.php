@@ -20,10 +20,10 @@ if(php_sapi_name() !== 'cli') {
 
 require __DIR__.'/lib/rb.php';
 
-$config = Config::get();
+$config = \Config::get();
 
-R::setup($config->db->dsn, $config->db->user, $config->db->pass);
-R::freeze(true);
+\R::setup($config->db->dsn, $config->db->user, $config->db->pass);
+\R::freeze(true);
 
 
 ?>

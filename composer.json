@@ -15,9 +15,13 @@
         "symfony/css-selector": "^4.1",
         "symfony/dom-crawler": "^4.1",
         "symfony/dotenv": "*",
+        "symfony/filesystem": "*",
+        "symfony/finder": "*",
         "symfony/flex": "^1.1",
         "symfony/framework-bundle": "*",
         "symfony/maker-bundle": "^1.7",
+        "symfony/monolog-bundle": "^3.3",
+        "symfony/orm-pack": "^1.0",
         "symfony/yaml": "*"
     },
     "require-dev": {
