@@ -25,6 +25,7 @@
         "symfony/yaml": "*"
     },
     "require-dev": {
+        "symfony/phpunit-bridge": "*"
     },
     "config": {
         "preferred-install": {

@@ -12,13 +12,13 @@ class ExPage_Index extends ExPage_Abstract
         $ret = array();
 
         $links = $this->findElement('td.itd .it5 a');
+        /** @var \DOMElement $linkElem */
         foreach ($links as $linkElem) {
             $gallery = new stdClass();
 
-            $link = pq($linkElem);
-            $gallery->name = $link->text();
+            $gallery->name = $linkElem->textContent;
 
-            preg_match("~https://exhentai.org/g/(\d*)/(\w*)/~", $link->attr('href'), $matches);
+            preg_match("~https://e(?:x|-)hentai.org/g/(\d*)/(\w*)/~", $linkElem->getAttribute('href'), $matches);
 
             if (isset($matches[1]) && isset($matches[2])) {
                 $gallery->exhenid = $matches[1];

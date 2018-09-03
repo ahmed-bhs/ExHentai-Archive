@@ -56,15 +56,18 @@ class Config
     public static function buildCookieJar()
     {
         $cookieJar = new \Symfony\Component\BrowserKit\CookieJar();
+        $domains = ['.e-hentai.org','.exhentai.org'];
 
-        foreach((array)self::$config->cookie as $name => $value) {
-            $cookieJar->set(new \Symfony\Component\BrowserKit\Cookie(
-                $name,
-                $value,
-                null,
-                null,
-                '.exhentai.org'
-            ));
+        foreach($domains as $domain) {
+            foreach ((array)self::$config->cookie as $name => $value) {
+                $cookieJar->set(new \Symfony\Component\BrowserKit\Cookie(
+                    $name,
+                    $value,
+                    null,
+                    null,
+                    $domain
+                ));
+            }
         }
 
         return $cookieJar;

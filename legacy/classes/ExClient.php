@@ -9,6 +9,7 @@ class ExClient
 {
     const LOG_TAG = 'ExClient';
     const BASE_URL = 'https://exhentai.org';
+    const SAFE_DOMAIN = 'https://e-hentai.org';
     const USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36';
 
     private $ctr = 0;
@@ -43,12 +44,16 @@ class ExClient
      */
     private $historyContainer = [];
 
+    private $safeDomain;
+
     /**
      * ExClient constructor.
      * @param array $options
      */
-    public function __construct()
+    public function __construct($safeDomain = false)
     {
+        $this->safeDomain = $safeDomain;
+
         $this->history = \GuzzleHttp\Middleware::history($this->historyContainer);
         $stack = \GuzzleHttp\HandlerStack::create();
         $stack->push($this->history);
@@ -64,8 +69,10 @@ class ExClient
             ]
         ];
 
+        $baseUri = ($this->safeDomain) ? self::SAFE_DOMAIN : self::BASE_URL;
+
         $guzzleClient = new GuzzleClient([
-            'base_uri' => self::BASE_URL,
+            'base_uri' => $baseUri,
             'defaults' => $this->guzzleDefaults,
             'handler' => $stack
         ]);
@@ -98,12 +105,12 @@ class ExClient
 
     public function tagSearch($search = '', $page = 0)
     {
-        return $this->get(sprinf("%s/tag/%s/%d", self::BASE_URL, $search, $page));
+        return $this->get(sprinf("tag/%s/%d", $search, $page));
     }
 
-    public function gallery($id, $hash, $thumbPage = 0)
+    public function gallery($id, $hash, $thumbPage = 0, $safeDomain = false)
     {
-        return $this->get(sprintf('%s/g/%d/%s/?p=%d', self::BASE_URL, $id, $hash, $thumbPage));
+        return $this->get(sprintf('g/%d/%s/?p=%d', $id, $hash, $thumbPage));
     }
 
     public function buttonPress($url)
@@ -188,6 +195,7 @@ class ExClient
     {
         Log::debug(self::LOG_TAG, 'GET REQUEST %s', $uri);
         $this->lastResponse = $this->client->request('GET', $uri, $parameters);
+        Log::debug(self::LOG_TAG, 'RESP: [%d] %s', $this->client->getInternalResponse()->getStatus(), $this->client->getInternalRequest()->getUri());
 
         self::validateResponse($this->client->getInternalResponse());
         return $this->client->getInternalResponse()->getContent();
