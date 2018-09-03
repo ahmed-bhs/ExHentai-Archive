@@ -70,7 +70,8 @@ COPY . /var/www/html
 WORKDIR /var/www/html
 
 RUN composer install --optimize-autoloader \
-    && chmod +x init.d.sh
+    && chmod +x init.d.sh \
+    && chmod -R +x docker-entrypoint-init.d/*
 
 RUN rm -rf /var/www/html/public/images \
     && ln -s /images/ /var/www/html/public/ \
