@@ -11,7 +11,7 @@ class Config
     public static function get()
     {
         if (!self::$config) {
-            $data = json_decode(file_get_contents('config.json'));
+            $data = json_decode(file_get_contents(__DIR__.'/../config.json'));
 
             $config = $data->base;
 

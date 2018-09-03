@@ -1,7 +1,7 @@
 <?php
 
 chdir(__DIR__.'/../');
-require 'common.php';
+require __DIR__.'/../common.php';
 
 $api = new ApiHandler();
 $api->handle($_REQUEST);
