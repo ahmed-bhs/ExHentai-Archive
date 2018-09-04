@@ -45,7 +45,6 @@ class Model_Image extends Model_Abstract
         $image->filename = pathinfo($filepath, PATHINFO_BASENAME);
         R::store($image);
 
-        Log::debug('ModelImage', 'COPY FROM %s TO %s', $filepath, $image->getFilepath());
         $ret = copy($filepath, $image->getFilepath());
         if (!$ret) {
             R::trash($image);
