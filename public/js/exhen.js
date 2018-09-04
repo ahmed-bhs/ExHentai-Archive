@@ -344,9 +344,9 @@ $(document).ready(function() {
 						})
 					} else {
                         if(gallery.archived == 1) {
-                            var url = 'api.php?' + $.param({ action: 'gallerythumb', id: gallery.id, index: 0, type: 1 });
+                            var url = 'legacy/?' + $.param({ action: 'gallerythumb', id: gallery.id, index: 0, type: 1 });
                         } else {
-                            var url = 'api.php?' + $.param({ action: 'exgallerythumb', id: gallery.id });
+                            var url = 'legacy/?' + $.param({ action: 'exgallerythumb', id: gallery.id });
                         }
 
 						item.css({
@@ -1005,7 +1005,7 @@ $(document).ready(function() {
                 params.resize = Math.ceil(window.screen.availWidth / 128) * 128;
             }
 			
-			return 'api.php?' + $.param(params);
+			return 'legacy/?' + $.param(params);
 		}
 
 		function scrollToPage(index) {
@@ -1133,7 +1133,7 @@ $(document).ready(function() {
             if (mode) {
                 thumbsList.empty();
                 for(var i = 0; i < gallery.numfiles; i++) {
-                    var url = 'api.php?' + $.param({ action: 'gallerythumb', id: gallery.id, index: i, type: 2 });
+                    var url = 'legacy/?' + $.param({ action: 'gallerythumb', id: gallery.id, index: i, type: 2 });
 
                     var thumb = $('<div class="gallery-thumb"/>');
                     thumb.data('index', i);
@@ -1283,7 +1283,7 @@ $(document).ready(function() {
 				imageHolder.width('auto').height('auto');
 				imageHolder.trigger('load');
 			} else if(action == 'download') {
-				var url = '/api.php?' + $.param({ action: 'download', id: gallery.id });
+				var url = '/legacy/?' + $.param({ action: 'download', id: gallery.id });
 				window.open(url);
 			} else if(action == 'similar') {
 				var tagList = [ ];
