@@ -10,7 +10,7 @@ class ExClient
     const LOG_TAG = 'ExClient';
     const BASE_URL = 'https://exhentai.org';
     const SAFE_DOMAIN = 'https://e-hentai.org';
-    const USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36';
+    const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36';
 
     private $ctr = 0;
 
@@ -108,9 +108,18 @@ class ExClient
         return $this->get(sprinf("tag/%s/%d", $search, $page));
     }
 
-    public function gallery($id, $hash, $thumbPage = 0, $safeDomain = false)
+    public function home()
     {
-        return $this->get(sprintf('g/%d/%s/?p=%d', $id, $hash, $thumbPage));
+        return $this->get('home');
+    }
+
+    public function gallery($id, $hash, $thumbPage = 0)
+    {
+        $Uri = sprintf('g/%d/%s', $id, $hash);
+        if($thumbPage !== 0) {
+            $Uri = sprintf('%s/?p=%d', $Uri, $thumbPage);
+        }
+        return $this->get($Uri);
     }
 
     public function buttonPress($url)
