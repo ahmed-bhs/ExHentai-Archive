@@ -28,3 +28,4 @@ docker-compose.override.yml
 .phpunit
 /phpunit.xml
 ###< symfony/phpunit-bridge ###
+last-response.html
