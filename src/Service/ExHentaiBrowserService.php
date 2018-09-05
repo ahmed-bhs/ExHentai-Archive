@@ -3,21 +3,18 @@ namespace App\Service;
 
 use App\Entity\ExhentaiGallery;
 use App\Model\GalleryToken;
-use Doctrine\Common\Collections\ArrayCollection;
-use Goutte\Client;
-use GuzzleHttp\Client as GuzzleClient;
+use GuzzleHttp\Client;
+use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
-use Symfony\Component\BrowserKit\Cookie;
-use Symfony\Component\BrowserKit\CookieJar;
-use Symfony\Component\DomCrawler\Crawler;
+use GuzzleHttp\Cookie\CookieJar;
 
 class ExHentaiBrowserService
 {
     const BASE_URL       = 'https://exhentai.org/';
-    const LOGIN_BASE_URL = 'https://e-hentai.org/';
+    const SAFE_URL       = 'https://e-hentai.org/';
     const API_URL        = 'https://api.e-hentai.org/api.php';
     const USER_AGENT     = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36';
     /**
@@ -40,6 +37,16 @@ class ExHentaiBrowserService
      */
     private $cookieJar = null;
 
+    /**
+     * @var \DateTimeInterface
+     */
+    private $lastRequest;
+
+    /**
+     * @var int
+     */
+    private $requestCounter=0;
+
     public function __construct(
         ?string $username,
         ?string $password,
@@ -58,15 +65,19 @@ class ExHentaiBrowserService
             ];
 
             $cookieJar = new CookieJar();
-            foreach($cookieParams as $key => $value) {
-                $cookieJar->set(new Cookie(
-                    $key,
-                    $value,
-                    null,
-                    null,
-                    '.exhentai.org'
-                ));
+
+            $domains = ['.ehentai.org', '.exhentai.org','.e-hentai.org'];
+            foreach($domains as $domain) {
+                foreach ($cookieParams as $key => $value) {
+                    $cookieJar->setCookie(new SetCookie([
+                        'Name'   => $key,
+                        'Value'  => $value,
+                        'Domain' => $domain
+                    ]));
+                }
             }
+
+//            var_dump($cookieJar);die();
 
             $this->cookieJar = $cookieJar;
         }
@@ -81,8 +92,9 @@ class ExHentaiBrowserService
         $stack = HandlerStack::create();
         $stack->push($this->history);
 
-        $guzzleClient = new GuzzleClient([
+        $this->client = new Client([
             'base_uri' => self::BASE_URL,
+            'cookies'  => $this->cookieJar,
             'defaults' => [
                 'allow_redirects' => [
                     'max'             => 5,
@@ -95,20 +107,17 @@ class ExHentaiBrowserService
             ],
             'handler' => $stack
         ]);
-
-        $this->client = new Client([], null, $this->cookieJar);
-        $this->client->setClient($guzzleClient);
     }
 
     public function login(string $username, string $password)
     {
-        $loginPage = self::LOGIN_BASE_URL.'bounce_login.php';
-        $crawler = $this->get($loginPage);
-        $form = $crawler->selectButton('Login!')->form();
-        $formResult = $this->client->submit($form, [
-            'UserName' => $username,
-            'password' => $password
-        ]);
+//        $loginPage = self::LOGIN_BASE_URL.'bounce_login.php';
+//        $crawler = $this->get($loginPage);
+//        $form = $crawler->selectButton('Login!')->form();
+//        $formResult = $this->client->submit($form, [
+//            'UserName' => $username,
+//            'password' => $password
+//        ]);
 
         // @todo handle login and assign cookie to exhentai domain
     }
@@ -118,14 +127,40 @@ class ExHentaiBrowserService
 
     }
 
-    public function search(string $query, int $page = 0)
+    public function getByTag(string $tag, int $page = null)
     {
-
+        return $this->getGalleriesFromOverview(
+            $this->get('/tag/'. $tag, ['page' => $page])
+        );
     }
 
-    public function getIndex(int $page = 0)
+    public function search(string $query, int $page = null)
     {
+        if(strpos($query, ':') !== FALSE)
+            return $this->getByTag($query, $page);
 
+        return $this->getGalleriesFromOverview($this->get('/', [
+            'search' => $query,
+            'page'   => $page
+        ]));
+    }
+
+    public function getIndex(int $page = null)
+    {
+        return $this->getGalleriesFromOverview($this->get('/', ['page' => $page]));
+    }
+
+    private function getGalleriesFromOverview(string $html)
+    {
+        if(preg_match_all('~https:\/\/e(?:-|x)hentai.org\/g\/([0-9]+)\/([0-9a-f]+)\/~i', $html, $matches, PREG_PATTERN_ORDER)) {
+            $tokenList = [];
+
+            for ($i=0; $i < count($matches[0]); $i++) {
+                $tokenList[$matches[1][$i]] = new GalleryToken($matches[1][$i], $matches[2][$i]);
+            }
+
+            return $this->getGalleries($tokenList);
+        }
     }
 
     public function getGallery(int $id, string $token): ExhentaiGallery
@@ -135,17 +170,17 @@ class ExHentaiBrowserService
 
     /**
      * @param GalleryToken[] ...$tokens
-     * @return ArrayCollection|ExhentaiGallery[]
+     * @return ExhentaiGallery[]
      */
     public function getGalleries(array $tokens)
     {
-        $galleries = new ArrayCollection();
+        $galleries = [];
         // Check if we're trying to lookup more than 25 galleries (API LIMIT)
         // If so, split up and request per 25 galleries
         if(count($tokens) > 25) {
             while(count($tokens)) {
                 $galleryTokens = array_splice($tokens, 0, 25);
-                $this->getGalleries($galleryTokens);
+                $galleries = array_merge($galleries, $this->getGalleries($galleryTokens));
             }
         } else {
             $gidList = [];
@@ -167,7 +202,7 @@ class ExHentaiBrowserService
 
             if(isset($response->gmetadata)) {
                 foreach($response->gmetadata as $metadata) {
-                    $galleries->add(ExhentaiGallery::fromApi($metadata));
+                    $galleries[] = ExhentaiGallery::fromApi($metadata);
                 }
             }
 
@@ -175,7 +210,7 @@ class ExHentaiBrowserService
         }
     }
 
-    public function getGalleryPage(string $token, int $galleryId, int $page)
+    public function getGalleryPage(string $token, int $galleryId, int $page = null)
     {
 
     }
@@ -185,17 +220,65 @@ class ExHentaiBrowserService
 
     }
 
-    private function get(string $uri, array $parameters = []): Crawler
+    private function get(string $uri, array $parameters = [])
     {
-        return $this->client->request('GET', $uri, $parameters);
+        if($parameters)
+            $uri = sprintf('%s?%s', $uri, http_build_query($parameters));
+
+        $response = $this->request('GET', $uri);
+
+        $responseBody = $response->getBody()->getContents();
+
+        file_put_contents(__DIR__.'/../../last-response.html', $responseBody);
+
+        return $responseBody;
     }
 
     private function api(string $method, array $payload): ResponseInterface
     {
-        return $this->client->getClient()->post(sprintf(self::API_URL), [
+        return $this->request('POST', sprintf(self::API_URL), [
             RequestOptions::JSON => array_merge([
                 'method' => $method
             ], $payload)
         ]);
+    }
+
+    public function request($method, $uri = '/', $parameters = [])
+    {
+        if(!$this->lastRequest)
+            $this->lastRequest = new \DateTime();
+
+        if(!$this->requestCounter >= 4) {
+            $this->requestCounter++;
+        } else {
+            var_dump('Rate limit reached');
+            // Rate limit reached
+            sleep(5);
+            $this->requestCounter=0;
+        }
+
+        return $this->client->request($method, $uri, $parameters);
+    }
+
+
+    public function getHistory()
+    {
+        return $this->guzzleContainer;
+    }
+
+    /**
+     * @return Client
+     */
+    public function getClient(): Client
+    {
+        return $this->client;
+    }
+
+    /**
+     * @param Client $client
+     */
+    public function setClient(Client $client): void
+    {
+        $this->client = $client;
     }
 }

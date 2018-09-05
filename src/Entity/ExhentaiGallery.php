@@ -84,6 +84,12 @@ class ExhentaiGallery
      */
     private $Tags;
 
+    /**
+     * @ORM\OneToOne(targetEntity="App\Entity\ExhentaiArchiverKey", cascade={"persist", "remove"})
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $ArchiverKey;
+
     public function __construct()
     {
         $this->Tags = new ArrayCollection();
@@ -92,19 +98,18 @@ class ExhentaiGallery
     public static function fromApi(\stdClass $json)
     {
         $self = new self();
-        $self->setId($json->gid);
-        $self->setToken($json->token);
-        //Archive key
-        //$self->setArchiverKey($json->archiver_key)
-        $self->setTitle($json->title);
-        $self->setTitleJapan($json->title_jpn);
-        $self->setCategory((new ExhentaiCategory())->setTitle($json->category));
-        $self->setUploader($json->uploader);
-        $self->setPosted(new \DateTime('@'.$json->posted));
-        $self->setFileCount($json->filecount);
-        // SET FILESIZE
-        $self->setExpunged($json->expunged);
-        $self->setRating($json->rating);
+        $self->setId($json->gid)
+            ->setToken($json->token)
+            ->setArchiverKey(new ExhentaiArchiverKey($json->archiver_key))
+            ->setTitle($json->title)
+            ->setTitleJapan($json->title_jpn)
+            ->setCategory((new ExhentaiCategory())->setTitle($json->category))
+            ->setUploader($json->uploader)
+            ->setPosted(new \DateTime('@'.$json->posted))
+            ->setFileCount($json->filecount)
+            ->setFilesize($json->filesize)
+            ->setExpunged($json->expunged)
+            ->setRating($json->rating);
         $namespaces = [];
         foreach($json->tags as $tagString) {
             $tag = new ExhentaiTag();
@@ -310,6 +315,18 @@ class ExhentaiGallery
             $this->Tags->removeElement($tag);
             $tag->removeGallery($this);
         }
+
+        return $this;
+    }
+
+    public function getArchiverKey(): ?ExhentaiArchiverKey
+    {
+        return $this->ArchiverKey;
+    }
+
+    public function setArchiverKey(ExhentaiArchiverKey $ArchiverKey): self
+    {
+        $this->ArchiverKey = $ArchiverKey;
 
         return $this;
     }

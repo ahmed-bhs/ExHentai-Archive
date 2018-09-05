@@ -32,6 +32,12 @@ class ExhentaiArchiverKey
      */
     private $Time;
 
+    public function __construct(string $token)
+    {
+        $this->setTime(new \DateTime());
+        $this->setToken($token);
+    }
+
     public function getId(): ?int
     {
         return $this->id;

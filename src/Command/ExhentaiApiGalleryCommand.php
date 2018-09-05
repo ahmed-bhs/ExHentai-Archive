@@ -3,8 +3,8 @@
 namespace App\Command;
 
 use App\Entity\ExhentaiGallery;
-use App\Model\GalleryToken;
 use App\Service\ExHentaiBrowserService;
+use GuzzleHttp\Exception\TooManyRedirectsException;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -27,33 +27,44 @@ class ExhentaiApiGalleryCommand extends ContainerAwareCommand
     {
         $this
             ->setDescription('Lookup galleries from e-hentai API. USE the ID:TOKEN as input format. Use of multiple galleries supported')
-            ->addArgument('galleries', InputArgument::IS_ARRAY, 'galleries to lookup (ID:TOKEN FORMAT)')
+            ->addArgument('query', InputArgument::OPTIONAL, 'galleries to lookup (ID:TOKEN FORMAT)')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $io = new SymfonyStyle($input, $output);
-        $galleries = $input->getArgument('galleries');
+        $query = $input->getArgument('query');
 
-        if ($galleries){
-            $io->note(sprintf('Looking up %d galleries', count($galleries)));
+        try {
+            if ($query) {
+                $io->note(sprintf('Searching for %s', $query));
+                $galleries = $this->browser->search($query);
+            } else {
+                $galleries = $this->browser->getIndex();
+            }
+
+            /** @var ExhentaiGallery $gallery */
+            foreach ($galleries as $gallery) {
+                $io->note(sprintf('Category: %s | Name: %s', $gallery->getCategory()->getTitle(), $gallery->getTitle()));
+            }
+
+            $io->success(sprintf('Complete with %d results', count($galleries)));
+        } catch (TooManyRedirectsException $exception) {
+            $io->error('FATAL: '.$exception->getMessage());
+
+            $history = $this->browser->getHistory();
+            foreach($history as $transaction) {
+                if($transaction['response']) {
+                    $io->caution(sprintf(
+                        '[%s] %s -> %s',
+                        $transaction['request']->getMethod(),
+                        (string)$transaction['request']->getUri(),
+                        $transaction['response']->getStatusCode()
+                    ));
+                }
+            }
         }
-
-        $tokenList = [];
-        foreach($galleries as $gallery) {
-            $explode = explode(':', $gallery);
-            $tokenList[] = new GalleryToken($explode[0], $explode[1]);
-        }
-
-        $galleries = $this->browser->getGalleries($tokenList);
-
-        /** @var ExhentaiGallery $gallery */
-        foreach($galleries as $gallery)
-        {
-            $io->note(sprintf('Category: %s | Name: %s', $gallery->getCategory()->getTitle(), $gallery->getTitle()));
-        }
-
-        $io->success('Complete');
+//        $io->note($this->browser->getClient()->getInternalRequest()->getUri());
     }
 }
