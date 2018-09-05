@@ -9,6 +9,7 @@
         "fabpot/goutte": "^3.2",
         "guzzlehttp/guzzle": "^6.3",
         "intervention/image": "^2.4",
+        "pbxg33k/pbxg33k-traits": "^1.1",
         "psr/log": "^1.0",
         "sensio/framework-extra-bundle": "^5.2",
         "symfony/console": "*",

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "494241daa3f383c30a1d425113d621dc",
+    "content-hash": "9262981583774a23104ccc752c65c84e",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1773,6 +1773,45 @@
                 "service proxies"
             ],
             "time": "2018-08-26T15:07:25+00:00"
+        },
+        {
+            "name": "pbxg33k/pbxg33k-traits",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PBXg33k/php-traits.git",
+                "reference": "36015325384d738d9b5cfebdd96412ae9f292a58"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PBXg33k/php-traits/zipball/36015325384d738d9b5cfebdd96412ae9f292a58",
+                "reference": "36015325384d738d9b5cfebdd96412ae9f292a58",
+                "shasum": ""
+            },
+            "require-dev": {
+                "crada/php-apidoc": "^1.3",
+                "phpmd/phpmd": "^2.4",
+                "phpunit/phpunit": "^5.3",
+                "satooshi/php-coveralls": "<1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Pbxg33k\\Traits\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Oguzhan Uysal",
+                    "email": "development@oguzhanuysal.eu"
+                }
+            ],
+            "description": "A collection of traits to make life with PHP easier",
+            "time": "2017-12-02T23:09:03+00:00"
         },
         {
             "name": "psr/cache",

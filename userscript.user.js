@@ -14,7 +14,7 @@ function createArchiveLink(gid, token) {
     link.data('token', token);
     
     link.on('click', function() {
-        $.getJSON(baseUrl + 'api.php', { action: 'addgallery', gid: link.data('gid'), token: link.data('token'), key: key }, function(data, result) {
+        $.getJSON(baseUrl + '`legacy/', { action: 'addgallery', gid: link.data('gid'), token: link.data('token'), key: key }, function(data, result) {
             if(data.ret === true && result === 'success') {
                 $(link).css({
                     color: '#777',
@@ -35,7 +35,7 @@ function createArchiveLink(gid, token) {
 $('div#gd5').each(function() { //archive button on gallery detail
     var container = $(this);
     
-    $.getJSON(baseUrl + 'api.php', { action: 'hasgallery', gid: gid, key: key }, function(data, result) {
+    $.getJSON(baseUrl + 'legacy/', { action: 'hasgallery', gid: gid, key: key }, function(data, result) {
         if(data.data.exists) {
             var p = $('<p class="g2"><img src="//exhentai.org/img/mr.gif"> </p>');
             var link = "";

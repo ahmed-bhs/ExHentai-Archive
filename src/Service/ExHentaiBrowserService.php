@@ -1,10 +1,15 @@
 <?php
 namespace App\Service;
 
+use App\Entity\ExhentaiGallery;
+use App\Model\GalleryToken;
+use Doctrine\Common\Collections\ArrayCollection;
 use Goutte\Client;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
+use GuzzleHttp\RequestOptions;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\BrowserKit\Cookie;
 use Symfony\Component\BrowserKit\CookieJar;
 use Symfony\Component\DomCrawler\Crawler;
@@ -13,6 +18,7 @@ class ExHentaiBrowserService
 {
     const BASE_URL       = 'https://exhentai.org/';
     const LOGIN_BASE_URL = 'https://e-hentai.org/';
+    const API_URL        = 'https://api.e-hentai.org/api.php';
     const USER_AGENT     = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36';
     /**
      * @var array
@@ -122,9 +128,51 @@ class ExHentaiBrowserService
 
     }
 
-    public function getGallery(int $id, string $token)
+    public function getGallery(int $id, string $token): ExhentaiGallery
     {
+        return $this->getGalleries([new GalleryToken($id, $token)])->first();
+    }
 
+    /**
+     * @param GalleryToken[] ...$tokens
+     * @return ArrayCollection|ExhentaiGallery[]
+     */
+    public function getGalleries(array $tokens)
+    {
+        $galleries = new ArrayCollection();
+        // Check if we're trying to lookup more than 25 galleries (API LIMIT)
+        // If so, split up and request per 25 galleries
+        if(count($tokens) > 25) {
+            while(count($tokens)) {
+                $galleryTokens = array_splice($tokens, 0, 25);
+                $this->getGalleries($galleryTokens);
+            }
+        } else {
+            $gidList = [];
+            /** @var GalleryToken $token */
+            foreach($tokens as $token) {
+                $gidList[] = [
+                    $token->getId(),
+                    $token->getToken()
+                ];
+            }
+
+            $apiGalleries = $this->api('gdata', [
+                'gidlist' => $gidList,
+                'namespace' => 1
+            ]);
+
+
+            $response = json_decode($apiGalleries->getBody()->getContents());
+
+            if(isset($response->gmetadata)) {
+                foreach($response->gmetadata as $metadata) {
+                    $galleries->add(ExhentaiGallery::fromApi($metadata));
+                }
+            }
+
+            return $galleries;
+        }
     }
 
     public function getGalleryPage(string $token, int $galleryId, int $page)
@@ -140,5 +188,14 @@ class ExHentaiBrowserService
     private function get(string $uri, array $parameters = []): Crawler
     {
         return $this->client->request('GET', $uri, $parameters);
+    }
+
+    private function api(string $method, array $payload): ResponseInterface
+    {
+        return $this->client->getClient()->post(sprintf(self::API_URL), [
+            RequestOptions::JSON => array_merge([
+                'method' => $method
+            ], $payload)
+        ]);
     }
 }
