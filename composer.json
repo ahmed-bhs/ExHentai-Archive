@@ -37,6 +37,9 @@
         "psr-4": {
             "PHPImageWorkshop\\": "lib/PHPImageWorkshop/",
             "App\\": "src/"
+        },
+        "psr-0": {
+            "": "legacy/classes/"
         }
     },
     "autoload-dev": {
