@@ -83,6 +83,9 @@
     "pbxg33k/pbxg33k-traits": {
         "version": "1.1.1"
     },
+    "php-coveralls/php-coveralls": {
+        "version": "v2.1.0"
+    },
     "psr/cache": {
         "version": "1.0.1"
     },
@@ -94,9 +97,6 @@
     },
     "psr/simple-cache": {
         "version": "1.0.1"
-    },
-    "satooshi/php-coveralls": {
-        "version": "v2.0.0"
     },
     "sensio/framework-extra-bundle": {
         "version": "5.2",

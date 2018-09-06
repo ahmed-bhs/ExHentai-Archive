@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ce2eb7a1aab152e5f5ab582e295f0cf8",
+    "content-hash": "8abf618b915df7d7219f5dca384631e9",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -3749,17 +3749,17 @@
     ],
     "packages-dev": [
         {
-            "name": "satooshi/php-coveralls",
-            "version": "v2.0.0",
+            "name": "php-coveralls/php-coveralls",
+            "version": "v2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/php-coveralls/php-coveralls.git",
-                "reference": "3eaf7eb689cdf6b86801a3843940d974dc657068"
+                "reference": "3b00c229726f892bfdadeaf01ea430ffd04a939d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/php-coveralls/php-coveralls/zipball/3eaf7eb689cdf6b86801a3843940d974dc657068",
-                "reference": "3eaf7eb689cdf6b86801a3843940d974dc657068",
+                "url": "https://api.github.com/repos/php-coveralls/php-coveralls/zipball/3b00c229726f892bfdadeaf01ea430ffd04a939d",
+                "reference": "3b00c229726f892bfdadeaf01ea430ffd04a939d",
                 "shasum": ""
             },
             "require": {
@@ -3785,7 +3785,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.0-dev"
+                    "dev-master": "2.1-dev"
                 }
             },
             "autoload": {
@@ -3829,8 +3829,7 @@
                 "github",
                 "test"
             ],
-            "abandoned": "php-coveralls/php-coveralls",
-            "time": "2017-12-08T14:28:16+00:00"
+            "time": "2018-05-22T23:11:08+00:00"
         },
         {
             "name": "symfony/phpunit-bridge",
