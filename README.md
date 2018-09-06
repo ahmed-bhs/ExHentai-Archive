@@ -3,6 +3,12 @@ ExHentai-Archive
 
 A system for crawling, downloading and viewing ExHentai galleries.
 
+Notice
+---
+This project is based upon [Sn0wCrack/ExHentai-Archive](https://github.com/Sn0wCrack/ExHentai-Archive) and is undergoing major refactoring rendering it incompatible with upstream in time.
+This project will contain migrations to retain data to switch between forks, but since this contains extra steps this project will be duplicated into a new project the moment maintaining the relation will be a too big of a burden.
+Check [TODO.md](TODO.md) for current progress.
+
 Screenshots
 ---
 <img src="https://raw.githubusercontent.com/kimoi/ExHentai-Archive/screenshots/screenshots/screenshot1.jpg" alt="" />

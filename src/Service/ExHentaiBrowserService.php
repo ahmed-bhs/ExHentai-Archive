@@ -4,6 +4,7 @@ namespace App\Service;
 use App\Entity\ExhentaiGallery;
 use App\Model\GalleryToken;
 use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -22,13 +23,15 @@ class ExHentaiBrowserService
      */
     private $guzzleContainer = [];
 
+    public $rateLimiterEnabled = true;
+
     /**
      * @var Middleware
      */
     private $history;
 
     /**
-     * @var Client
+     * @var ClientInterface
      */
     private $client;
 
@@ -147,7 +150,8 @@ class ExHentaiBrowserService
 
     public function getIndex(int $page = null)
     {
-        return $this->getGalleriesFromOverview($this->get('/', ['page' => $page]));
+        $data = $this->get('/', ['page' => $page]);
+        return $this->getGalleriesFromOverview($data);
     }
 
     private function getGalleriesFromOverview(string $html)
@@ -160,6 +164,8 @@ class ExHentaiBrowserService
             }
 
             return $this->getGalleries($tokenList);
+        } else {
+            var_dump('NOT A MATCH');die();
         }
     }
 
@@ -178,9 +184,12 @@ class ExHentaiBrowserService
         // Check if we're trying to lookup more than 25 galleries (API LIMIT)
         // If so, split up and request per 25 galleries
         if(count($tokens) > 25) {
-            while(count($tokens)) {
+            $apiCalls = ceil(count($tokens)/25);
+
+            for($i=0;$i<=$apiCalls;$i++) {
                 $galleryTokens = array_splice($tokens, 0, 25);
-                $galleries = array_merge($galleries, $this->getGalleries($galleryTokens));
+                $newGalleries = $this->getGalleries($galleryTokens);
+                $galleries = array_merge($galleries, $newGalleries);
             }
         } else {
             $gidList = [];
@@ -197,7 +206,6 @@ class ExHentaiBrowserService
                 'namespace' => 1
             ]);
 
-
             $response = json_decode($apiGalleries->getBody()->getContents());
 
             if(isset($response->gmetadata)) {
@@ -205,9 +213,8 @@ class ExHentaiBrowserService
                     $galleries[] = ExhentaiGallery::fromApi($metadata);
                 }
             }
-
-            return $galleries;
         }
+        return $galleries;
     }
 
     public function getGalleryPage(string $token, int $galleryId, int $page = null)
@@ -229,7 +236,6 @@ class ExHentaiBrowserService
 
         $responseBody = $response->getBody()->getContents();
 
-        file_put_contents(__DIR__.'/../../last-response.html', $responseBody);
 
         return $responseBody;
     }
@@ -243,7 +249,7 @@ class ExHentaiBrowserService
         ]);
     }
 
-    public function request($method, $uri = '/', $parameters = [])
+    public function request(string $method, $uri = '/', $parameters = [])
     {
         if(!$this->lastRequest)
             $this->lastRequest = new \DateTime();
@@ -251,9 +257,9 @@ class ExHentaiBrowserService
         if(!$this->requestCounter >= 4) {
             $this->requestCounter++;
         } else {
-            var_dump('Rate limit reached');
             // Rate limit reached
-            sleep(5);
+            if($this->rateLimiterEnabled)
+                sleep(5);
             $this->requestCounter=0;
         }
 
@@ -269,15 +275,15 @@ class ExHentaiBrowserService
     /**
      * @return Client
      */
-    public function getClient(): Client
+    public function getClient(): ClientInterface
     {
         return $this->client;
     }
 
     /**
-     * @param Client $client
+     * @param ClientInterface $client
      */
-    public function setClient(Client $client): void
+    public function setClient(ClientInterface $client): void
     {
         $this->client = $client;
     }

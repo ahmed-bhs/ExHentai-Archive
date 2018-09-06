@@ -26,6 +26,7 @@
         "symfony/yaml": "*"
     },
     "require-dev": {
+        "satooshi/php-coveralls": "^2.0",
         "symfony/phpunit-bridge": "*"
     },
     "config": {

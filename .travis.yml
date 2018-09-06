@@ -1,0 +1,17 @@
+# .travis.yml
+language: php
+php:
+- 7.1
+- 7.2
+
+install:
+- curl -s http://getcomposer.org/installer | php
+- php composer.phar install --dev
+before_script:
+- mkdir -p build/logs
+- chmod +x bin/phpunit
+- chmod +x bin/php-coveralls
+script:
+- bin/phpunit --coverage-clover build/logs/clover.xml
+after_success:
+- travis_retry bin/php-coveralls -v
