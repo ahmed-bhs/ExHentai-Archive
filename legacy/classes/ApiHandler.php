@@ -486,7 +486,6 @@ class ApiHandler
             ob_start('ob_gzhandler');
         }
         
-        header('Access-Control-Allow-Origin: *');
         header('Content-Type: application/json');
         echo $body;
 
