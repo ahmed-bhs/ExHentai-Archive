@@ -8,6 +8,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
+use function GuzzleHttp\Psr7\str;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
 use GuzzleHttp\Cookie\CookieJar;
@@ -54,13 +55,10 @@ class ExHentaiBrowserService
         ?string $username,
         ?string $password,
         ?string $passwordHash,
-        ?string $memberId
+        ?int $memberId
     )
     {
-        if($username && $password) {
-            throw new \Exception('Feature not yet implemented');
-            $this->login($username, $password);
-        } elseif ($memberId && $passwordHash) {
+        if ($memberId && $passwordHash) {
             $cookieParams = [
                 'ipb_member_id' => $memberId,
                 'ipb_pass_hash' => $passwordHash,
@@ -80,9 +78,10 @@ class ExHentaiBrowserService
                 }
             }
 
-//            var_dump($cookieJar);die();
-
             $this->cookieJar = $cookieJar;
+        } elseif($username && $password) {
+            throw new \Exception('Feature not yet implemented');
+            $this->login($username, $password);
         }
 
         $this->initClient();
@@ -132,9 +131,16 @@ class ExHentaiBrowserService
 
     public function getByTag(string $tag, int $page = null)
     {
-        return $this->getGalleriesFromOverview(
-            $this->get('/tag/'. $tag, ['page' => $page])
-        );
+        if(strpos($tag,'$') === false) $tag = $tag.'$';
+        if(strpos($tag,':') !== false) {
+            list($namespace, $tagname) = explode(':', $tag);
+            // Tags containing spaces in name are quoted
+            if(strpos($tagname, ' ') !== false) {
+                $tag = $namespace.':"'.$tagname. '"';
+            }
+        }
+
+        return $this->search(str_replace(':','%3A', $tag), $page);
     }
 
     public function search(string $query, int $page = null)
@@ -143,7 +149,7 @@ class ExHentaiBrowserService
             return $this->getByTag($query, $page);
 
         return $this->getGalleriesFromOverview($this->get('/', [
-            'search' => $query,
+            'f_search' => $query,
             'page'   => $page
         ]));
     }
@@ -286,5 +292,13 @@ class ExHentaiBrowserService
     public function setClient(ClientInterface $client): void
     {
         $this->client = $client;
+    }
+
+    /**
+     * @return CookieJar
+     */
+    public function getCookieJar(): CookieJar
+    {
+        return $this->cookieJar;
     }
 }

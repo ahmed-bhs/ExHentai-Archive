@@ -5,7 +5,6 @@ use App\Entity\ExhentaiGallery;
 use App\Service\ExHentaiBrowserService;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -22,19 +21,12 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     private $browser;
 
-    /**
-     * @var MockHandler
-     */
-    private $mockHandler;
-
     protected function setUp()
     {
-        $this->mockHandler = new MockHandler();
-
         $this->client = $this->getMockBuilder(ClientInterface::class)
             ->disableOriginalConstructor()->getMock();
 
-        $this->browser = new ExHentaiBrowserService('','','','');
+        $this->browser = new ExHentaiBrowserService('username','password','passhash',123);
         $this->browser->setClient($this->client);
         $this->browser->rateLimiterEnabled = false;
 
@@ -44,23 +36,88 @@ class ExHentaiBrowserServiceTest extends TestCase
     /**
      * @test
      */
+    public function willCreateCookieJarOnConstruct()
+    {
+        $cookieJar = $this->browser->getCookieJar();
+        $this->assertEquals('passhash', $cookieJar->getCookieByName('ipb_pass_hash')->getValue());
+        $this->assertEquals(123, $cookieJar->getCookieByName('ipb_member_id')->getValue());
+    }
+
+    /**
+     * @test
+     */
     public function willGetGalleriesFromListIndex()
     {
-        $html = file_get_contents(__DIR__.'/../stubs/e-hentai-index-list.html');
+        $this->createOverviewTest('/',file_get_contents(__DIR__.'/../stubs/e-hentai-index-list.html'));
+
+        $result = $this->browser->getIndex();
+
+        $this->assertTrue(is_array($result));
+        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
+    }
+
+    /**
+     * @test
+     */
+    public function willGetGalleriesFromThumbnailViewIndex()
+    {
+        $this->createOverviewTest('/',file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+
+        $result = $this->browser->getIndex();
+
+        $this->assertTrue(is_array($result));
+        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
+    }
+
+    /**
+     * @test
+     */
+    public function willSearchForTags()
+    {
+        $this->createOverviewTest('female%253Amilf', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+
+        $result = $this->browser->getByTag('female:milf');
+
+        $this->assertTrue(is_array($result));
+        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
+    }
+
+    /**
+     * @test
+     */
+    public function willSearchForTagsWithSpacesInTagName()
+    {
+        $this->createOverviewTest('female%253A%22big+breasts%24%22', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+
+        $result = $this->browser->getByTag('female:big breasts');
+
+        $this->assertTrue(is_array($result));
+        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
+    }
+
+    /**
+     * @test
+     */
+    public function willSearch()
+    {
+        $this->createOverviewTest('test', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+
+        $result = $this->browser->search('test');
+
+        $this->assertTrue(is_array($result));
+        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
+    }
+
+    private function createOverviewTest($uri, $html)
+    {
         $apiResponsecontent = '{"gmetadata": [{"gid": 618395,"token": "0439fa3666","archiver_key": "403565--d887c6dfe8aae79ed0071551aa1bafeb4a5ee361","title": "(Kouroumu 8) [Handful☆Happiness! (Fuyuki Nanahara)] TOUHOU GUNMANIA A2 (Touhou Project)","title_jpn": "(紅楼夢8) [Handful☆Happiness! (七原冬雪)] TOUHOU GUNMANIA A2 (東方Project)","category": "Non-H","thumb": "https://ehgt.org/14/63/1463dfbc16847c9ebef92c46a90e21ca881b2a12-1729712-4271-6032-jpg_l.jpg","uploader": "avexotsukaai","posted": "1376143500","filecount": "20","filesize": 51210504,"expunged": false,"rating": "4.43","torrentcount": "0","tags": ["parody:touhou project","group:handful happiness","artist:nanahra fuyuki","full color","artbook"]}]}';
         $apiRequests = ceil(230/25);
-
-        // Inject mock responses in handler
-        $this->mockHandler->append(new Response(200, [], $html));
-        for ($i=0; $i < $apiRequests; $i++) {
-            $this->mockHandler->append(new Response(200, [], $apiResponsecontent));
-        }
 
         $this->client->expects($this->at(0))
             ->method('request')
             ->with(
                 $this->stringContains('GET'),
-                $this->stringContains('/'),
+                $this->stringContains($uri, false),
                 $this->anything()
             )
             ->willReturn(new Response(200,[],$html));
@@ -75,10 +132,5 @@ class ExHentaiBrowserServiceTest extends TestCase
                 )
                 ->willReturn(new Response(200, [], $apiResponsecontent));
         }
-
-        $result = $this->browser->getIndex();
-
-        $this->assertTrue(is_array($result));
-        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
     }
 }
