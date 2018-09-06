@@ -65,6 +65,5 @@ class ExhentaiApiGalleryCommand extends ContainerAwareCommand
                 }
             }
         }
-//        $io->note($this->browser->getClient()->getInternalRequest()->getUri());
     }
 }
