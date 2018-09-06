@@ -159,13 +159,13 @@ $('div.itg').each(function() { //gallery search
                 var link = createArchiveLink(gid, token);
                 link.css({ fontSize: '9px' });
                 link.on('click', function() {
-                    galleryContainer.parents('.id1').css({ background: 'green' });
+                    $(this).parents('.id1').css({ background: 'green' });
                 });
 
                 link.prependTo($('.id44 div', galleryContainer));
             } else {
                 var res = "";
-                if (data.archived && data.deleted == 0) {
+                if (data.archived == 1 && data.deleted == 0) {
                     res = $('<p>Archived</p>');
                     galleryContainer.css({background: 'green'});
                 }
@@ -174,7 +174,9 @@ $('div.itg').each(function() { //gallery search
                     res = $('<p>Deleted</p>');
                     galleryContainer.css({background: '#AA0000'});
                 }
-                res.prependTo($('.id44 div', galleryContainer));
+
+                if(res !== "")
+                    res.prependTo($('.id44 div', galleryContainer));
             }
         });
 
