@@ -52,8 +52,6 @@ class ExHentaiBrowserService
     private $requestCounter=0;
 
     public function __construct(
-        ?string $username,
-        ?string $password,
         ?string $passwordHash,
         ?int $memberId
     )
@@ -79,9 +77,6 @@ class ExHentaiBrowserService
             }
 
             $this->cookieJar = $cookieJar;
-        } elseif($username && $password) {
-            throw new \Exception('Feature not yet implemented');
-            $this->login($username, $password);
         }
 
         $this->initClient();
@@ -109,19 +104,6 @@ class ExHentaiBrowserService
             ],
             'handler' => $stack
         ]);
-    }
-
-    public function login(string $username, string $password)
-    {
-//        $loginPage = self::LOGIN_BASE_URL.'bounce_login.php';
-//        $crawler = $this->get($loginPage);
-//        $form = $crawler->selectButton('Login!')->form();
-//        $formResult = $this->client->submit($form, [
-//            'UserName' => $username,
-//            'password' => $password
-//        ]);
-
-        // @todo handle login and assign cookie to exhentai domain
     }
 
     public function logout()

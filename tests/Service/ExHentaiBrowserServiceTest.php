@@ -28,7 +28,7 @@ class ExHentaiBrowserServiceTest extends TestCase
         $this->client = $this->getMockBuilder(ClientInterface::class)
             ->disableOriginalConstructor()->getMock();
 
-        $this->browser = new ExHentaiBrowserService('username','password','passhash',123);
+        $this->browser = new ExHentaiBrowserService('passhash',123);
         $this->browser->setClient($this->client);
         $this->browser->rateLimiterEnabled = false;
 
@@ -199,7 +199,7 @@ class ExHentaiBrowserServiceTest extends TestCase
 
     public function testConstruct()
     {
-        $browser = new ExHentaiBrowserService('username', 'password', 'passwordhash', 39);
+        $browser = new ExHentaiBrowserService('passwordhash', 39);
 
         $cookieJar = $browser->getCookieJar();
 

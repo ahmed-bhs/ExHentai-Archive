@@ -33,8 +33,6 @@ services:
     exhentai.client:
         class: App\Service\ExHentaiBrowserService
         arguments:
-            - '%env(EXHENTAI_USERNAME)%'
-            - '%env(EXHENTAI_PASSWORD)%'
             - '%env(EXHENTAI_PASSWORDHASH)%'
             - '%env(int:EXHENTAI_MEMBERID)%'
 
