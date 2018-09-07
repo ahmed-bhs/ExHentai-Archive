@@ -11,6 +11,8 @@ use PHPUnit\Framework\TestCase;
 
 class ExHentaiBrowserServiceTest extends TestCase
 {
+    const API_GALLERY_RESPONSE_SUCCESS = '{"gmetadata": [{"gid": 618395,"token": "0439fa3666","archiver_key": "403565--d887c6dfe8aae79ed0071551aa1bafeb4a5ee361","title": "(Kouroumu 8) [Handful☆Happiness! (Fuyuki Nanahara)] TOUHOU GUNMANIA A2 (Touhou Project)","title_jpn": "(紅楼夢8) [Handful☆Happiness! (七原冬雪)] TOUHOU GUNMANIA A2 (東方Project)","category": "Non-H","thumb": "https://ehgt.org/14/63/1463dfbc16847c9ebef92c46a90e21ca881b2a12-1729712-4271-6032-jpg_l.jpg","uploader": "avexotsukaai","posted": "1376143500","filecount": "20","filesize": 51210504,"expunged": false,"rating": "4.43","torrentcount": "0","tags": ["parody:touhou project","group:handful happiness","artist:nanahra fuyuki","full color","artbook"]}]}';
+
     /**
      * @var MockObject|Client
      */
@@ -71,6 +73,24 @@ class ExHentaiBrowserServiceTest extends TestCase
 
     /**
      * @test
+     * @expectedException \Exception
+     */
+    public function willThrowExceptionIfNoGalleriesWereParsed()
+    {
+        $this->client->expects($this->at(0))
+            ->method('request')
+            ->with(
+                $this->stringContains('GET'),
+                $this->stringContains('/', false),
+                $this->anything()
+            )
+            ->willReturn(new Response(200));
+
+        $this->browser->getIndex();
+    }
+
+    /**
+     * @test
      */
     public function willSearchForTags()
     {
@@ -108,9 +128,97 @@ class ExHentaiBrowserServiceTest extends TestCase
         $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
     }
 
+    /**
+     * @test
+     */
+    public function willUseTagAsSearchIfSearchIsCalledWithATagQuery()
+    {
+        $this->createOverviewTest('female%253Amilf%24', file_get_contents(__DIR__ . '/../stubs/e-hentai-index-thumbs.html'));
+
+        $result = $this->browser->search('female:milf');
+
+        $this->assertTrue(is_array($result));
+        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
+    }
+
+    /**
+     * @test
+     */
+    public function willReturnSingleGallery()
+    {
+        $this->client->expects($this->once())
+            ->method('request')
+            ->with(
+                $this->stringContains('POST'),
+                $this->stringContains('api.php'),
+                $this->anything()
+            )
+            ->willReturn(new Response(200, [], self::API_GALLERY_RESPONSE_SUCCESS));
+
+        $result = $this->browser->getGallery(1, 'abc');
+
+        $this->assertInstanceOf(ExhentaiGallery::class, $result);
+    }
+
+    /**
+     * @test
+     */
+    public function willRateLimitRequestsAtFivePerFiveSecond()
+    {
+        // Enable rate limit
+        $this->browser->rateLimiterEnabled = true;
+        $timeStart = time();
+
+        $this->client->expects($this->exactly(5))
+            ->method('request')
+            ->with(
+                $this->stringContains('GET'),
+                $this->stringContains('/'),
+                $this->isType('array')
+            )
+            ->willReturn(new Response());
+
+        for ($i = 0; $i <= 4; $i++) {
+            if ($i == 3) {
+                $lastUnLimitedCall = time();
+            }
+            $this->browser->request('GET', '/');
+        }
+
+        $timeEnd = time();
+
+        $this->assertTrue(($lastUnLimitedCall - $timeStart) < 5);
+        $this->assertTrue(($timeEnd - $timeStart) >= 5);
+    }
+
+    public function testGetters()
+    {
+        $this->assertEquals($this->client, $this->browser->getClient());
+        $this->assertTrue(is_array($this->browser->getHistory()));
+    }
+
+    public function testConstruct()
+    {
+        $browser = new ExHentaiBrowserService('username', 'password', 'passwordhash', 39);
+
+        $cookieJar = $browser->getCookieJar();
+
+        $this->assertEquals(39, $cookieJar->getCookieByName('ipb_member_id')->getValue());
+        $this->assertEquals('passwordhash', $cookieJar->getCookieByName('ipb_pass_hash')->getValue());
+    }
+
+    /**
+     * @test
+     */
+    public function logoutWillClearCookieJar()
+    {
+        $this->browser->logout();
+
+        $this->assertEquals(0, $this->browser->getCookieJar()->count());
+    }
+
     private function createOverviewTest($uri, $html)
     {
-        $apiResponsecontent = '{"gmetadata": [{"gid": 618395,"token": "0439fa3666","archiver_key": "403565--d887c6dfe8aae79ed0071551aa1bafeb4a5ee361","title": "(Kouroumu 8) [Handful☆Happiness! (Fuyuki Nanahara)] TOUHOU GUNMANIA A2 (Touhou Project)","title_jpn": "(紅楼夢8) [Handful☆Happiness! (七原冬雪)] TOUHOU GUNMANIA A2 (東方Project)","category": "Non-H","thumb": "https://ehgt.org/14/63/1463dfbc16847c9ebef92c46a90e21ca881b2a12-1729712-4271-6032-jpg_l.jpg","uploader": "avexotsukaai","posted": "1376143500","filecount": "20","filesize": 51210504,"expunged": false,"rating": "4.43","torrentcount": "0","tags": ["parody:touhou project","group:handful happiness","artist:nanahra fuyuki","full color","artbook"]}]}';
         $apiRequests = ceil(230/25);
 
         $this->client->expects($this->at(0))
@@ -130,7 +238,7 @@ class ExHentaiBrowserServiceTest extends TestCase
                     $this->stringContains('api.php'),
                     $this->anything()
                 )
-                ->willReturn(new Response(200, [], $apiResponsecontent));
+                ->willReturn(new Response(200, [], self::API_GALLERY_RESPONSE_SUCCESS));
         }
     }
 }

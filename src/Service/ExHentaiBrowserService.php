@@ -5,13 +5,12 @@ use App\Entity\ExhentaiGallery;
 use App\Model\GalleryToken;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Cookie\CookieJar;
 use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
-use function GuzzleHttp\Psr7\str;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
-use GuzzleHttp\Cookie\CookieJar;
 
 class ExHentaiBrowserService
 {
@@ -19,6 +18,7 @@ class ExHentaiBrowserService
     const SAFE_URL       = 'https://e-hentai.org/';
     const API_URL        = 'https://api.e-hentai.org/api.php';
     const USER_AGENT     = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36';
+
     /**
      * @var array
      */
@@ -126,7 +126,7 @@ class ExHentaiBrowserService
 
     public function logout()
     {
-
+        $this->cookieJar->clear();
     }
 
     public function getByTag(string $tag, int $page = null)
@@ -154,6 +154,10 @@ class ExHentaiBrowserService
         ]));
     }
 
+    /**
+     * @param int|null $page
+     * @return ExhentaiGallery[]
+     */
     public function getIndex(int $page = null)
     {
         $data = $this->get('/', ['page' => $page]);
@@ -170,14 +174,14 @@ class ExHentaiBrowserService
             }
 
             return $this->getGalleries($tokenList);
-        } else {
-            var_dump('NOT A MATCH');die();
         }
+
+        throw new \Exception('No galleries found in overview');
     }
 
     public function getGallery(int $id, string $token): ExhentaiGallery
     {
-        return $this->getGalleries([new GalleryToken($id, $token)])->first();
+        return $this->getGalleries([new GalleryToken($id, $token)])[0];
     }
 
     /**
@@ -233,7 +237,7 @@ class ExHentaiBrowserService
 
     }
 
-    private function get(string $uri, array $parameters = [])
+    public function get(string $uri, array $parameters = [])
     {
         if($parameters)
             $uri = sprintf('%s?%s', $uri, http_build_query($parameters));
@@ -257,16 +261,13 @@ class ExHentaiBrowserService
 
     public function request(string $method, $uri = '/', $parameters = [])
     {
+        $this->requestCounter++;
         if(!$this->lastRequest)
             $this->lastRequest = new \DateTime();
 
-        if(!$this->requestCounter >= 4) {
-            $this->requestCounter++;
-        } else {
-            // Rate limit reached
-            if($this->rateLimiterEnabled)
-                sleep(5);
-            $this->requestCounter=0;
+        if ($this->requestCounter > 4 && $this->rateLimiterEnabled) {
+            sleep(5);
+            $this->requestCounter = 0;
         }
 
         return $this->client->request($method, $uri, $parameters);
@@ -301,4 +302,6 @@ class ExHentaiBrowserService
     {
         return $this->cookieJar;
     }
+
+
 }

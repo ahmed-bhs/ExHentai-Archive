@@ -4,7 +4,12 @@ class Log
 {
     const LOG_ERROR = 'error';
     const LOG_DEBUG = 'debug';
-    
+
+    /**
+     * @var \Psr\Log\LoggerInterface
+     */
+    public static $monolog;
+
     public static function add($level, $tag, $message)
     {
         $vargs = array_slice(func_get_args(), 3);
@@ -12,13 +17,8 @@ class Log
             $params = array_merge(array($message), $vargs);
             $message = call_user_func_array('sprintf', $params);
         }
-        
-        $fmt = "%s: [%s][%s] %s\n";
 
-        if (substr(PHP_SAPI, 0, 3) == 'cli') {
-            printf($fmt, strtoupper($level), date('Y-m-d H:i:s'), $tag, $message);
-        }
-
+        self::$monolog->log($level, $message, ['tag' => $tag]);
     }
     
     public static function debug($tag, $message)

@@ -4,7 +4,6 @@ use Intervention\Image\ImageManagerStatic as Image;
 
 class ApiHandler
 {
-
     protected $params;
     protected $start;
 
@@ -24,6 +23,8 @@ class ApiHandler
         $seed = (int)base_convert($seed, 36, 10);
 
         $search = trim($search);
+
+        Log::debug('ApiHandler', 'test');
 
         $ret = Model_Gallery::search($page, $pagesize, $search, $order, $seed, $unarchived, $read, $color);
         $result = $ret['result'];
