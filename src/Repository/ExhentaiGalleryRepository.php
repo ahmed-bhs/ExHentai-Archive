@@ -25,19 +25,29 @@ class ExhentaiGalleryRepository extends ExHentaiRepository
 
     public function fromApi(\stdClass $json, $downloadstate = 0)
     {
-        $gallery = new ExhentaiGallery();
+        $gallery = $this->find($json->gid);
+
+        if(!$gallery) {
+            $gallery = new ExhentaiGallery();
+            $gallery
+                ->setArchiverKey(
+                    $this->_em->getRepository(ExhentaiArchiverKey::class)->findOneOrCreate(
+                        ['token' => $json->archiver_key, 'Gallery' => $gallery], (new ExhentaiArchiverKey($json->archiver_key))->setGallery($gallery)))
+                ->setCategory(
+                    $this->_em->getRepository(ExhentaiCategory::class)->findOneOrCreate(
+                        ['Title'=> $json->category], (new ExhentaiCategory())->setTitle($json->category)
+                    ));
+        } else {
+            if($gallery->getLastAudit() > new \DateTime("-1 day")) {
+                return $gallery;
+            }
+        }
+
         $gallery
             ->setId($json->gid)
             ->setToken($json->token)
-            ->setArchiverKey(
-                $this->_em->getRepository(ExhentaiArchiverKey::class)->findOneOrCreate(
-                    ['token' => $json->archiver_key, 'Gallery' => $gallery], (new ExhentaiArchiverKey($json->archiver_key))->setGallery($gallery)))
             ->setTitle($json->title)
             ->setTitleJapan($json->title_jpn)
-            ->setCategory(
-                $this->_em->getRepository(ExhentaiCategory::class)->findOneOrCreate(
-                    ['Title'=> $json->category], (new ExhentaiCategory())->setTitle($json->category)
-                ))
             ->setUploader($json->uploader)
             ->setPosted(new \DateTime('@'.$json->posted))
             ->setFileCount($json->filecount)
@@ -45,7 +55,8 @@ class ExhentaiGalleryRepository extends ExHentaiRepository
             ->setExpunged($json->expunged)
             ->setRating($json->rating)
             ->setTorrentCount($json->torrentcount)
-            ->setDownloadState($downloadstate);
+            ->setDownloadState($downloadstate)
+            ->setLastAudit(new \DateTime());
 
         $this->_em->getRepository(ExhentaiGallery::class)->findOneOrCreate([
             'id' => $gallery->getId()

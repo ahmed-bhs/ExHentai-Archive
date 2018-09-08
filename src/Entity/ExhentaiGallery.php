@@ -94,6 +94,11 @@ class ExhentaiGallery
      */
     private $Images;
 
+    /**
+     * @ORM\Column(type="datetimetz", nullable=true)
+     */
+    private $LastAudit;
+
     public function __construct()
     {
         $this->Tags = new ArrayCollection();
@@ -293,6 +298,18 @@ class ExhentaiGallery
     public function setDownloadState(int $downloadState): self
     {
         $this->downloadState = $downloadState;
+
+        return $this;
+    }
+
+    public function getLastAudit(): ?\DateTimeInterface
+    {
+        return $this->LastAudit;
+    }
+
+    public function setLastAudit(\DateTimeInterface $LastAudit): self
+    {
+        $this->LastAudit = $LastAudit;
 
         return $this;
     }

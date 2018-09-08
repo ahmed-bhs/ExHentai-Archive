@@ -6,6 +6,7 @@
         "ext-ctype": "*",
         "ext-curl": "^7.2",
         "ext-iconv": "*",
+        "ext-zip": "*",
         "fabpot/goutte": "^3.2",
         "guzzlehttp/guzzle": "^6.3",
         "intervention/image": "^2.4",
@@ -23,6 +24,7 @@
         "symfony/maker-bundle": "^1.7",
         "symfony/monolog-bundle": "^3.3",
         "symfony/orm-pack": "^1.0",
+        "symfony/process": "*",
         "symfony/yaml": "*"
     },
     "require-dev": {

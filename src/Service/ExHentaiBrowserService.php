@@ -120,7 +120,7 @@ class ExHentaiBrowserService
         $this->cookieJar->clear();
     }
 
-    public function getByTag(string $tag, int $page = null)
+    public function getTagSearchQuery(string $tag)
     {
         if(strpos($tag,'$') === false) $tag = $tag.'$';
         if(strpos($tag,':') !== false) {
@@ -131,7 +131,12 @@ class ExHentaiBrowserService
             }
         }
 
-        return $this->search(str_replace(':','%3A', $tag), $page);
+        return str_replace(':','%3A', $tag);
+    }
+
+    public function getByTag(string $tag, int $page = null)
+    {
+        return $this->search($this->getTagSearchQuery($tag), $page);
     }
 
     public function search(string $query, int $page = null)
@@ -231,12 +236,11 @@ class ExHentaiBrowserService
     public function get(string $uri, array $parameters = [])
     {
         if($parameters)
-            $uri = sprintf('%s?%s', $uri, http_build_query($parameters));
+            $uri = sprintf('%s?%s', $uri, urldecode(http_build_query($parameters)));
 
         $response = $this->request('GET', $uri);
 
         $responseBody = $response->getBody()->getContents();
-
 
         return $responseBody;
     }

@@ -30,3 +30,5 @@ docker-compose.override.yml
 /phpunit.xml
 ###< symfony/phpunit-bridge ###
 last-response.html
+*.php___jb_tmp___
+*.php___jb_old___
