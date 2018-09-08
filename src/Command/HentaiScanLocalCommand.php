@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use Doctrine\DBAL\FetchMode;
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -12,7 +14,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
 
-class HentaiScanLocalCommand extends Command
+class HentaiScanLocalCommand extends ContainerAwareCommand
 {
     protected static $defaultName = 'hentai:scan-local';
 
@@ -26,7 +28,7 @@ class HentaiScanLocalCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        require_once __DIR__.'/../../legacy/common.php';
+//        require_once __DIR__.'/../../legacy/common.php';
 
         $io = new SymfonyStyle($input, $output);
         $directoryPath = $input->getArgument('path');
@@ -35,39 +37,70 @@ class HentaiScanLocalCommand extends Command
         $finder = new Finder();
 
         if($filesystem->exists($directoryPath)) {
+            $galleryNames = [];
             $io->note('Loading galleries');
             // Get unarchived galleries
-            $galleries = \R::find('gallery','((archived = 0 and download = 1) or hasmeta = 0) and deleted = 0 and source = 0');
-            $galleryNames = [];
-            foreach($galleries as $gallery) {
-                $galleryNames[$gallery->id] = [
-                    $gallery->name,
-                    $gallery->origtitle
+            $db = $this->getContainer()->get('database_connection')->query('SELECT id, title, title_japan FROM exhentai_gallery');
+            $db->execute();
+            $galleries = $db->fetchAll(FetchMode::ASSOCIATIVE);
+            array_walk($galleries, function($item, $key) use (&$galleryNames) {
+                $galleryNames[$item['id']] = [
+                    $item['title'],
+                    $item['title_japan']
                 ];
-            }
-            unset($galleries);
+            });
 
             $io->note(sprintf('Loaded %d galleries without archives', count($galleryNames)));
             $io->note(sprintf('Scanning directory: %s', $directoryPath));
             $inodes = [];
-            $finder->files()->name('*.zip')->in($directoryPath)->filter(function (\SplFileInfo $file) use ($inodes) {
+            $finder->files()->name('*.zip')->in($directoryPath)->filter(function (\SplFileInfo $file) use (&$inodes) {
                 if(!in_array($file->getInode(), $inodes)) {
                     $inodes[] = $file->getInode();
                     return true;
                 }
-                return fakse;
+                return false;
             });
 
             $io->note(sprintf('Found %d files', $finder->count()));
 
             /** @var SplFileInfo $file */
             foreach($finder as $file) {
-                var_dump($file);die();
+                $finfo = $this->getZipInfo($file);
             }
 
+            die();
 
+
+        } else {
+            $io->error('Directory not found');
+            return 1;
         }
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
+    }
+
+    private function getZipInfo(SplFileInfo $fileInfo)
+    {
+        $zipArchive = new \ZipArchive();
+        $zipArchive->open($fileInfo->getPathname());
+
+        $contentSize = 0;
+        $compSize = 0;
+        for($i=0;$i<=$zipArchive->numFiles;$i++)
+        {
+            $stat = $zipArchive->statIndex($i);
+            $contentSize = $contentSize + $stat['size'];
+            $compSize    = $compSize + $stat['comp_size'];
+        }
+
+        $return = [
+            'fileName' => $fileInfo->getFilename(),
+            'files'    => $zipArchive->numFiles,
+            'size'     => $fileInfo->getSize(),
+            'contsize' => $contentSize, // THIS VALUE SHOULD MATCH WITH API
+            'compsize' => $compSize,
+        ];
+
+        return $return;
     }
 }
