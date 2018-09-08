@@ -17,7 +17,7 @@ class ExhentaiArchiverKey
     private $id;
 
     /**
-     * @ORM\OneToOne(targetEntity="App\Entity\ExhentaiGallery", cascade={"persist", "remove"})
+     * @ORM\OneToOne(targetEntity="App\Entity\ExhentaiGallery")
      * @ORM\JoinColumn(nullable=false)
      */
     private $Gallery;

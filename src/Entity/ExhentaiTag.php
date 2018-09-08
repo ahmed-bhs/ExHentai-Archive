@@ -25,12 +25,12 @@ class ExhentaiTag
 
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\ExhentaiTagNamespace", inversedBy="Tags")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $Namespace;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\ExhentaiGallery", inversedBy="Tags")
+     * @ORM\ManyToMany(targetEntity="App\Entity\ExhentaiGallery", mappedBy="Tags")
      */
     private $Galleries;
 

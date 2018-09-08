@@ -13,7 +13,6 @@ class ExhentaiGallery
 {
     /**
      * @ORM\Id()
-     * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
      */
     private $id;
@@ -24,12 +23,12 @@ class ExhentaiGallery
     private $token;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=1000, nullable=true)
      */
     private $title;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=1000, nullable=true)
      */
     private $TitleJapan;
 
@@ -75,32 +74,44 @@ class ExhentaiGallery
     private $TorrentCount;
 
     /**
-     * @ORM\OneToOne(targetEntity="App\Entity\DownloadState", mappedBy="Gallery", cascade={"persist", "remove"})
+     * @ORM\Column(type="integer")
      */
     private $downloadState;
 
     /**
-     * @ORM\ManyToMany(targetEntity="App\Entity\ExhentaiTag", mappedBy="Galleries")
+     * @ORM\ManyToMany(targetEntity="App\Entity\ExhentaiTag", inversedBy="Galleries")
      */
     private $Tags;
 
     /**
-     * @ORM\OneToOne(targetEntity="App\Entity\ExhentaiArchiverKey", cascade={"persist", "remove"})
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\OneToOne(targetEntity="App\Entity\ExhentaiArchiverKey", cascade={"remove"})
+     * @ORM\JoinColumn(nullable=true)
      */
     private $ArchiverKey;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\ExhentaiGalleryImage", mappedBy="Gallery", orphanRemoval=true)
+     */
+    private $Images;
 
     public function __construct()
     {
         $this->Tags = new ArrayCollection();
+        $this->Images = new ArrayCollection();
     }
 
+    /**
+     * @deprecated USE REPOSITORY
+     *
+     * @param \stdClass $json
+     * @return ExhentaiGallery
+     */
     public static function fromApi(\stdClass $json)
     {
         $self = new self();
         $self->setId($json->gid)
             ->setToken($json->token)
-            ->setArchiverKey(new ExhentaiArchiverKey($json->archiver_key))
+            ->setArchiverKey( new ExhentaiArchiverKey($json->archiver_key))
             ->setTitle($json->title)
             ->setTitleJapan($json->title_jpn)
             ->setCategory((new ExhentaiCategory())->setTitle($json->category))
@@ -274,19 +285,14 @@ class ExhentaiGallery
         return $this;
     }
 
-    public function getDownloadState(): ?DownloadState
+    public function getDownloadState(): ?int
     {
         return $this->downloadState;
     }
 
-    public function setDownloadState(DownloadState $downloadState): self
+    public function setDownloadState(int $downloadState): self
     {
         $this->downloadState = $downloadState;
-
-        // set the owning side of the relation if necessary
-        if ($this !== $downloadState->getGallery()) {
-            $downloadState->setGallery($this);
-        }
 
         return $this;
     }
@@ -327,6 +333,39 @@ class ExhentaiGallery
     public function setArchiverKey(ExhentaiArchiverKey $ArchiverKey): self
     {
         $this->ArchiverKey = $ArchiverKey;
+
+        $this->ArchiverKey->setGallery($this);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ExhentaiGalleryImage[]
+     */
+    public function getImages(): Collection
+    {
+        return $this->Images;
+    }
+
+    public function addImage(ExhentaiGalleryImage $image): self
+    {
+        if (!$this->Images->contains($image)) {
+            $this->Images[] = $image;
+            $image->setGallery($this);
+        }
+
+        return $this;
+    }
+
+    public function removeImage(ExhentaiGalleryImage $image): self
+    {
+        if ($this->Images->contains($image)) {
+            $this->Images->removeElement($image);
+            // set the owning side to null (unless already changed)
+            if ($image->getGallery() === $this) {
+                $image->setGallery(null);
+            }
+        }
 
         return $this;
     }

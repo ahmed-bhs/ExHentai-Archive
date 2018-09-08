@@ -31,6 +31,7 @@ services:
         tags: ['controller.service_arguments']
 
     exhentai.client:
+        public: true
         class: App\Service\ExHentaiBrowserService
         arguments:
             - '%env(EXHENTAI_PASSWORDHASH)%'

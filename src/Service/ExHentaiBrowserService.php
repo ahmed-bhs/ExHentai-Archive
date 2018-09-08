@@ -3,6 +3,7 @@ namespace App\Service;
 
 use App\Entity\ExhentaiGallery;
 use App\Model\GalleryToken;
+use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Cookie\CookieJar;
@@ -51,11 +52,19 @@ class ExHentaiBrowserService
      */
     private $requestCounter=0;
 
+    /**
+     * @var EntityManagerInterface
+     */
+    private $entityManager;
+
     public function __construct(
         ?string $passwordHash,
-        ?int $memberId
+        ?int $memberId,
+        EntityManagerInterface $entityManager
     )
     {
+        $this->entityManager = $entityManager;
+
         if ($memberId && $passwordHash) {
             $cookieParams = [
                 'ipb_member_id' => $memberId,
@@ -202,7 +211,7 @@ class ExHentaiBrowserService
 
             if(isset($response->gmetadata)) {
                 foreach($response->gmetadata as $metadata) {
-                    $galleries[] = ExhentaiGallery::fromApi($metadata);
+                    $galleries[] = $this->entityManager->getRepository(ExhentaiGallery::class)->fromApi($metadata);
                 }
             }
         }
@@ -248,7 +257,7 @@ class ExHentaiBrowserService
             $this->lastRequest = new \DateTime();
 
         if ($this->requestCounter > 4 && $this->rateLimiterEnabled) {
-            sleep(5);
+            sleep(7);
             $this->requestCounter = 0;
         }
 

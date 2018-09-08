@@ -2,7 +2,11 @@
 
 namespace App\Repository;
 
+use App\Entity\ExhentaiArchiverKey;
+use App\Entity\ExhentaiCategory;
 use App\Entity\ExhentaiGallery;
+use App\Entity\ExhentaiTag;
+use App\Entity\ExhentaiTagNamespace;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 
@@ -12,11 +16,69 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
  * @method ExhentaiGallery[]    findAll()
  * @method ExhentaiGallery[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ExhentaiGalleryRepository extends ServiceEntityRepository
+class ExhentaiGalleryRepository extends ExHentaiRepository
 {
     public function __construct(RegistryInterface $registry)
     {
         parent::__construct($registry, ExhentaiGallery::class);
+    }
+
+    public function fromApi(\stdClass $json, $downloadstate = 0)
+    {
+        $gallery = new ExhentaiGallery();
+        $gallery
+            ->setId($json->gid)
+            ->setToken($json->token)
+            ->setArchiverKey(
+                $this->_em->getRepository(ExhentaiArchiverKey::class)->findOneOrCreate(
+                    ['token' => $json->archiver_key, 'Gallery' => $gallery], (new ExhentaiArchiverKey($json->archiver_key))->setGallery($gallery)))
+            ->setTitle($json->title)
+            ->setTitleJapan($json->title_jpn)
+            ->setCategory(
+                $this->_em->getRepository(ExhentaiCategory::class)->findOneOrCreate(
+                    ['Title'=> $json->category], (new ExhentaiCategory())->setTitle($json->category)
+                ))
+            ->setUploader($json->uploader)
+            ->setPosted(new \DateTime('@'.$json->posted))
+            ->setFileCount($json->filecount)
+            ->setFilesize($json->filesize)
+            ->setExpunged($json->expunged)
+            ->setRating($json->rating)
+            ->setTorrentCount($json->torrentcount)
+            ->setDownloadState($downloadstate);
+
+        $this->_em->getRepository(ExhentaiGallery::class)->findOneOrCreate([
+            'id' => $gallery->getId()
+        ], $gallery);
+
+        foreach($json->tags as $tag) {
+            $tagObj = new ExhentaiTag();
+
+            $tagCriteria = [];
+
+            if(strpos($tag, ':') !== FALSE) {
+                list($namespace, $tagString) = explode(':', $tag);
+
+                $tagObj->setNamespace($this->_em->getRepository(ExhentaiTagNamespace::class)
+                        ->findOneOrCreate(['Name' => $namespace], (new ExhentaiTagNamespace())->setName($namespace))
+                )->setName($tagString);
+
+                $tagCriteria['Namespace'] = $tagObj->getNamespace()->getId();
+            } else {
+                $tagObj->setName($tag);
+            }
+            $tagObj->addGallery($gallery);
+
+            $tagCriteria['Name'] = $tagObj->getName();
+
+            $tagObj = $this->_em->getRepository(ExhentaiTag::class)->findOneOrCreate($tagCriteria, $tagObj);
+
+            $gallery->addTag($tagObj);
+        }
+
+        $this->_em->flush();
+
+        return $gallery;
     }
 
 //    /**

@@ -12,7 +12,7 @@ use Symfony\Bridge\Doctrine\RegistryInterface;
  * @method ExhentaiTag[]    findAll()
  * @method ExhentaiTag[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class ExhentaiTagRepository extends ServiceEntityRepository
+class ExhentaiTagRepository extends ExHentaiRepository
 {
     public function __construct(RegistryInterface $registry)
     {
