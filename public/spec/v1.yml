@@ -1,0 +1,152 @@
+swagger: '2.0'
+info:
+  description: This is a simplified REST API to interact with ExHentai
+  version: 1.0.0
+  title: ExHentai
+  # put the contact info for your development or API team
+  contact:
+    email: development@oguzhanuysal.eu
+
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+# tags are used for organizing operations
+tags:
+- name: admins
+  description: Secured Admin-only calls
+- name: developers
+  description: Operations available to regular developers
+
+paths:
+  /gallery:
+    get:
+      tags:
+      - developers
+      summary: searches gallery
+      operationId: searchGallery
+      produces:
+      - application/json
+      parameters:
+      - in: query
+        name: searchString
+        description: pass an optional search string for looking up inventory
+        required: false
+        type: string
+      - in: query
+        name: skip
+        description: number of records to skip for pagination
+        type: integer
+        format: int32
+        minimum: 0
+      - in: query
+        name: limit
+        description: maximum number of records to return
+        type: integer
+        format: int32
+        minimum: 0
+        maximum: 50
+      responses:
+        200:
+          description: search results matching criteria
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Gallery'
+        400:
+          description: bad input parameter
+  /gallery/{id}:
+    get:
+      tags:
+      - developers
+      summary: get a single gallery
+      operationId: getGallery
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: id
+        description: Gallery ID
+        type: integer
+        required: true
+      responses:
+        200:
+          description: gallery matching id
+
+          schema:
+            $ref: '#/definitions/Gallery'
+        400:
+          description: bad input parameter
+definitions:
+  Gallery:
+    properties:
+      id:
+        type: integer
+      token:
+        type: string
+      title:
+        type: string
+      titleJapan:
+        type: string
+      category:
+        $ref: '#/definitions/Category'
+      posted:
+        type: string
+        format: date-time
+        example: 2016-08-29T09:12:33.001Z
+      uploader:
+        type: string
+      fileSize:
+        type: integer
+      fileCount:
+        type: integer
+      expunged:
+        type: boolean
+      rating:
+        type: number
+      torrentCount:
+        type: integer
+      downloadState:
+        type: integer
+      tags:
+        type: array
+        items:
+          $ref: '#/definitions/GalleryTag'
+      #      archiverKey:
+      #      images:
+      lastAudit:
+        type: string
+        format: date-time
+        example: 2016-08-29T09:12:33.001Z
+  GalleryTag:
+    required:
+    - name
+    properties:
+      namespace:
+        $ref: '#/definitions/GalleryTagNamespace'
+      name:
+        type: string
+        example: lolicon
+  GalleryTagNamespace:
+    required:
+    - name
+    properties:
+      name:
+        type: string
+        example: female
+  Category:
+    required:
+    - name
+    properties:
+      name:
+        type: string
+        example: Doujinshi
+      galleries:
+        type: array
+        items:
+          $ref: '#/definitions/Gallery'
+# Added by API Auto Mocking Plugin
+host: virtserver.swaggerhub.com
+basePath: /PBXg33k/ExHentai/1.0.0
+schemes:
+- https
