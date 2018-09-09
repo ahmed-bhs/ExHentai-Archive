@@ -34,7 +34,7 @@ var archiver = {
     fire: function() {
         $.ajax({
             url: baseUrl+'legacy/',
-            method: 'GET',
+            method: 'POST',
             data: {
                 action: 'hasGalleries',
                 gids: this.galleryids,
@@ -168,11 +168,11 @@ $('div.itg').each(function() { //gallery search
                 if (data.archived == 1 && data.deleted == 0) {
                     res = $('<p>Archived</p>');
                     galleryContainer.css({background: 'green'});
-                }
-
-                if (data.deleted >= 1) {
+                } else if (data.deleted >= 1) {
                     res = $('<p>Deleted</p>');
                     galleryContainer.css({background: '#AA0000'});
+                } else if (data.archived == 0) {
+                    galleryContainer.css({background: '#ffaa00'})
                 }
 
                 if(res !== "")
