@@ -50,7 +50,7 @@ class ExHentaiMigrateDBCommand extends ContainerAwareCommand
             $io->success('Imported ' . $this->total . ' galleries');
             return 0;
         } else {
-            $process = new Process(['php', 'bin/console', 'exhentai:migrate-db', '--am-fork'], realpath($this->getContainer()->get('kernel')->getRootDir().'/../'));
+            $process = new Process(['php', 'bin/console', 'exhentai:migrate-db', '--am-fork', '--no-debug'], realpath($this->getContainer()->get('kernel')->getRootDir().'/../'));
             $process->setTimeout(0.0);
             $io->note('Creating fork');
 
