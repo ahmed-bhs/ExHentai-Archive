@@ -54,10 +54,16 @@ class ExhentaiScrapeCommand extends ContainerAwareCommand
         }
 
         for($page;$page <= $totalPage; $page++) {
-            $io->note(sprintf('Retrieving page %d out of %d',$page, $totalPage));
+            $io->note(sprintf('[%s] Retrieving page %d out of %d',$this->convert(memory_get_usage(true)),$page, $totalPage));
             $browser->getByTag($tag, $page);
         }
 
         $io->success('Scrape complete');
+    }
+
+    private function convert($size)
+    {
+        $unit=array('b','kb','mb','gb','tb','pb');
+        return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
     }
 }

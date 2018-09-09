@@ -24,6 +24,8 @@ services:
       DB_USER: appuser
       DB_PASS: userPass
       DB_NAME: exhen
+    ports:
+      - "80:80"
 
   mariadb:
     image: mariadb

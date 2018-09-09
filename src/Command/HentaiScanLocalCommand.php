@@ -40,13 +40,16 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
             $galleryNames = [];
             $io->note('Loading galleries');
             // Get unarchived galleries
-            $db = $this->getContainer()->get('database_connection')->query('SELECT id, title, title_japan FROM exhentai_gallery');
+            $db = $this->getContainer()->get('database_connection')->query('SELECT id, title, title_japan, file_count, filesize FROM exhentai_gallery');
             $db->execute();
             $galleries = $db->fetchAll(FetchMode::ASSOCIATIVE);
             array_walk($galleries, function($item, $key) use (&$galleryNames) {
                 $galleryNames[$item['id']] = [
-                    $item['title'],
-                    $item['title_japan']
+                    'title'            => $item['title'],
+                    'title_japan'      => $item['title_japan'],
+                    'normalized_title' => str_replace(['|',':'], '', $item['title']),
+                    'file_size'        => $item['filesize'],
+                    'file_count'       => $item['file_count']
                 ];
             });
 
@@ -66,6 +69,9 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
             /** @var SplFileInfo $file */
             foreach($finder as $file) {
                 $finfo = $this->getZipInfo($file);
+                foreach($galleryNames as $galleryName) {
+                    
+                }
             }
 
             die();

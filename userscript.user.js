@@ -152,8 +152,6 @@ $('div.itg').each(function() { //gallery search
         var gid = bits[4];
         var token = bits[5];
 
-
-
         archiver.addGalleryToQueue(gid, function(data){
             if (!data.exists) {
                 var link = createArchiveLink(gid, token);

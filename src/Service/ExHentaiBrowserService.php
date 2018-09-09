@@ -235,7 +235,7 @@ class ExHentaiBrowserService
 
     public function get(string $uri, array $parameters = [])
     {
-        if($parameters)
+        if(count($parameters))
             $uri = sprintf('%s?%s', $uri, urldecode(http_build_query($parameters)));
 
         $response = $this->request('GET', $uri);
