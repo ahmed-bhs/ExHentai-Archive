@@ -40,26 +40,41 @@ class ExhentaiDailyBonusCommand extends Command
             return 2;
         }
 
-        $galleryHtml = $this->browserService->get(sprintf(
-            '%sg/%s/%s/',
-            ExHentaiBrowserService::SAFE_URL,
-            $galleries[0]->getId(),
-            $galleries[0]->getToken()
-        ));
+        $success = false;
+        $data = [];
 
-        if (preg_match('~<div\sid=\"eventpane\"(?:[^>]*?)><p(?:[^>]*?)>It is the dawn of a new day!</p>.*?<strong>([0-9,]+)</strong> EXP, <strong>([0-9,]+)</strong> Credits, <strong>([0-9,]+)</strong> GP and <strong>([0-9,]+)</strong> Hath~', $galleryHtml, $matches)) {
-            $io->success(sprintf(
-                'Collected %d EXP, %d Credits, %d GP and %d Hath',
-                $matches[1],
-                $matches[2],
-                $matches[3],
-                $matches[4]
+        for($i=0; $i<2;$i++) {
+            $galleryHtml = $this->browserService->get(sprintf(
+                '%sg/%s/%s/',
+                ExHentaiBrowserService::SAFE_URL,
+                $galleries[$i]->getId(),
+                $galleries[$i]->getToken()
             ));
 
+            if (preg_match(
+                '~<div\sid=\"eventpane\"(?:[^>]*?)><p(?:[^>]*?)>It is the dawn of a new day!</p>.*?<strong>([0-9,]+)</strong> EXP, <strong>([0-9,]+)</strong> Credits, <strong>([0-9,]+)</strong> GP and <strong>([0-9,]+)</strong> Hath~',
+                $galleryHtml,
+                $matches
+            )) {
+                $success = true;
+                $data = $matches;
+            }
+        }
+
+        if($success) {
+            $io->success(sprintf(
+                'Collected %d EXP, %d Credits, %d GP and %d Hath',
+                $data[1],
+                $data[2],
+                $data[3],
+                $data[4]
+            ));
             return 0;
         } else {
             $io->error('Did not get any bonuses. Did you collect already today?');
             return 1;
         }
+
+
     }
 }

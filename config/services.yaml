@@ -34,11 +34,18 @@ services:
         public: true
         class: App\Service\ExHentaiBrowserService
         arguments:
-            - '%env(EXHENTAI_PASSWORDHASH)%'
-            - '%env(int:EXHENTAI_MEMBERID)%'
+            - '%env(CONF_PASSHASH)%'
+            - '%env(int:CONF_MEMBERID)%'
 
     App\Service\ExHentaiBrowserService: '@exhentai.client'
 
+    legacy.bridge:
+        public: true
+        class: App\Service\LegacyBridgeService
+        arguments:
+            - '@logger'
+            - '@exhentai.client'
 
+    App\Service\LegacyBridgeService: '@legacy.bridge'
   # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -12,6 +12,7 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\RequestOptions;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
 
 class ExHentaiBrowserService
 {
@@ -57,13 +58,17 @@ class ExHentaiBrowserService
      */
     private $entityManager;
 
+    private $logger;
+
     public function __construct(
         ?string $passwordHash,
         ?int $memberId,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        LoggerInterface $logger
     )
     {
         $this->entityManager = $entityManager;
+        $this->logger = $logger;
 
         if ($memberId && $passwordHash) {
             $cookieParams = [
@@ -238,7 +243,17 @@ class ExHentaiBrowserService
         if(count($parameters))
             $uri = sprintf('%s?%s', $uri, urldecode(http_build_query($parameters)));
 
+        $this->logger->debug('Sending GET request', [
+            'uri'        => $uri,
+            'parameters' => $parameters,
+            'cookie'     => $this->cookieJar->toArray()
+        ]);
+
         $response = $this->request('GET', $uri);
+
+        $this->logger->debug('RESPONSE', [
+            'code' => $response->getStatusCode()
+        ]);
 
         $responseBody = $response->getBody()->getContents();
 

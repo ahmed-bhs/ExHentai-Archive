@@ -8,6 +8,7 @@ $web = false;
 $task = "";
 $web_opts = array();
 
+set_time_limit(0);
 if (isset($_GET["task"])) {
     $task = $_GET["task"];
     if (isset($_GET["opts"])) {
