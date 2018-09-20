@@ -2,12 +2,11 @@
 
 namespace App\Command;
 
-use Doctrine\DBAL\FetchMode;
+use App\Entity\ExhentaiGallery;
+use Elastica\Query\Match;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Filesystem;
@@ -17,6 +16,13 @@ use Symfony\Component\Finder\SplFileInfo;
 class HentaiScanLocalCommand extends ContainerAwareCommand
 {
     protected static $defaultName = 'hentai:scan-local';
+    protected $zipArchive;
+
+    public function __construct(?string $name = null)
+    {
+        $this->zipArchive = new \ZipArchive();
+        parent::__construct($name);
+    }
 
     protected function configure()
     {
@@ -28,7 +34,8 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-//        require_once __DIR__.'/../../legacy/common.php';
+
+        $elasticaFinder = $this->getContainer()->get('fos_elastica.finder.app.gallery');
 
         $io = new SymfonyStyle($input, $output);
         $directoryPath = $input->getArgument('path');
@@ -37,26 +44,8 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
         $finder = new Finder();
 
         if($filesystem->exists($directoryPath)) {
-            $galleryNames = [];
-            $io->note('Loading galleries');
-            // Get unarchived galleries
-            $db = $this->getContainer()->get('database_connection')->query('SELECT id, title, title_japan, file_count, filesize FROM exhentai_gallery');
-            $db->execute();
-            $galleries = $db->fetchAll(FetchMode::ASSOCIATIVE);
-            array_walk($galleries, function($item, $key) use (&$galleryNames) {
-                $galleryNames[$item['id']] = [
-                    'title'            => $item['title'],
-                    'title_japan'      => $item['title_japan'],
-                    'normalized_title' => str_replace(['|',':'], '', $item['title']),
-                    'file_size'        => $item['filesize'],
-                    'file_count'       => $item['file_count']
-                ];
-            });
-
-            $io->note(sprintf('Loaded %d galleries without archives', count($galleryNames)));
-            $io->note(sprintf('Scanning directory: %s', $directoryPath));
             $inodes = [];
-            $finder->files()->name('*.zip')->in($directoryPath)->filter(function (\SplFileInfo $file) use (&$inodes) {
+            $finder->files()->name('*.zip')->in($directoryPath)->filter(function (\SplFileInfo $file) use ($inodes) {
                 if(!in_array($file->getInode(), $inodes)) {
                     $inodes[] = $file->getInode();
                     return true;
@@ -66,20 +55,36 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
 
             $io->note(sprintf('Found %d files', $finder->count()));
 
-            /** @var SplFileInfo $file */
             foreach($finder as $file) {
-                $finfo = $this->getZipInfo($file);
-                foreach($galleryNames as $galleryName) {
-                    
+                $match = false;
+                $zipInfo = $this->getZipInfo($file);
+
+                $searchName = substr($file->getFilename(), 0,-4);
+
+                $fieldQuery = new Match();
+                $fieldQuery->setFieldQuery('title', $searchName);
+                $pagination = $elasticaFinder->findPaginated($fieldQuery);
+                $results = $pagination->getCurrentPageResults();
+                /** @var ExhentaiGallery $result */
+                foreach($results as $result) {
+                    $filteredName = str_replace(['?','|', '\'','"','~'],' ', $result->getTitle());
+
+                    if($searchName == $filteredName) {
+                        $match = true;
+                        if($zipInfo['files'] == $results->getFileCount()) {
+                            $io->success(sprintf('100%% match on %s', $result->getTitle()));
+                        } else {
+                            $io->note(sprintf('Name match but imagecount mismatch on %s', $result->getTitle()));
+                        }
+                    }
                 }
+
+                if(!$match) {
+                    $io->note(sprintf('No match for %s', $searchName));
+                }
+
+                unset($results, $pagination, $fieldQuery);
             }
-
-            die();
-
-
-        } else {
-            $io->error('Directory not found');
-            return 1;
         }
 
         $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
@@ -87,25 +92,26 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
 
     private function getZipInfo(SplFileInfo $fileInfo)
     {
-        $zipArchive = new \ZipArchive();
-        $zipArchive->open($fileInfo->getPathname());
+        $this->zipArchive->open($fileInfo->getPathname());
 
         $contentSize = 0;
         $compSize = 0;
-        for($i=0;$i<=$zipArchive->numFiles;$i++)
+        for($i=0;$i<=$this->zipArchive->numFiles;$i++)
         {
-            $stat = $zipArchive->statIndex($i);
+            $stat = $this->zipArchive->statIndex($i);
             $contentSize = $contentSize + $stat['size'];
             $compSize    = $compSize + $stat['comp_size'];
         }
 
         $return = [
             'fileName' => $fileInfo->getFilename(),
-            'files'    => $zipArchive->numFiles,
+            'files'    => $this->zipArchive->numFiles,
             'size'     => $fileInfo->getSize(),
             'contsize' => $contentSize, // THIS VALUE SHOULD MATCH WITH API
             'compsize' => $compSize,
         ];
+
+        $this->zipArchive->close();
 
         return $return;
     }
