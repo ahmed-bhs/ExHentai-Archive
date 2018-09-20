@@ -118,11 +118,11 @@ class ExHentaiBrowserServiceTest extends TestCase
     /**
      * @test
      */
-    public function willSearch()
+    public function willSearchRemote()
     {
         $this->createOverviewTest('test', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
 
-        $result = $this->browser->search('test');
+        $result = $this->browser->searchRemote('test');
 
         $this->assertTrue(is_array($result));
         $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
@@ -131,11 +131,11 @@ class ExHentaiBrowserServiceTest extends TestCase
     /**
      * @test
      */
-    public function willUseTagAsSearchIfSearchIsCalledWithATagQuery()
+    public function willUseTagAsSearchIfSearchRemoteIsCalledWithATagQuery()
     {
         $this->createOverviewTest('female%253Amilf%24', file_get_contents(__DIR__ . '/../stubs/e-hentai-index-thumbs.html'));
 
-        $result = $this->browser->search('female:milf');
+        $result = $this->browser->searchRemote('female:milf');
 
         $this->assertTrue(is_array($result));
         $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);

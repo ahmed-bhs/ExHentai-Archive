@@ -141,10 +141,15 @@ class ExHentaiBrowserService
 
     public function getByTag(string $tag, int $page = null)
     {
-        return $this->search($this->getTagSearchQuery($tag), $page);
+        return $this->searchRemote($this->getTagSearchQuery($tag), $page);
     }
 
     public function search(string $query, int $page = null)
+    {
+        return $this->searchRemote($query, $page);
+    }
+
+    public function searchRemote(string $query, int $page = null)
     {
         if(strpos($query, ':') !== FALSE)
             return $this->getByTag($query, $page);
@@ -153,6 +158,11 @@ class ExHentaiBrowserService
             'f_search' => $query,
             'page'   => $page
         ]));
+    }
+
+    public function searchLocal(string $query, int $page = null)
+    {
+
     }
 
     /**

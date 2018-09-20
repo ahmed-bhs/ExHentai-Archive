@@ -39,7 +39,7 @@ class ExhentaiApiGalleryCommand extends ContainerAwareCommand
         try {
             if ($query) {
                 $io->note(sprintf('Searching for %s', $query));
-                $galleries = $this->browser->search($query);
+                $galleries = $this->browser->searchRemote($query);
             } else {
                 $galleries = $this->browser->getIndex();
             }
