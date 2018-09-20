@@ -50,12 +50,16 @@ class ExhentaiScrapeCommand extends ContainerAwareCommand
 
         if($page > $totalPage) {
             $io->error('Page exceeds total amount of pages available');
-            3;
+            return 3;
         }
 
         for($page;$page <= $totalPage; $page++) {
             $io->note(sprintf('[%s] Retrieving page %d out of %d',$this->convert(memory_get_usage(true)),$page, $totalPage));
-            $browser->getByTag($tag, $page);
+            if($tag) {
+                $browser->getByTag($tag, $page);
+            } else {
+                $browser->getIndex($page);
+            }
         }
 
         $io->success('Scrape complete');
