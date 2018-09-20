@@ -42,6 +42,7 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
 
         $filesystem = new Filesystem();
         $finder = new Finder();
+        $hit = $filemiss = $sizemiss = $countmiss = 0;
 
         if($filesystem->exists($directoryPath)) {
             $inodes = [];
@@ -61,6 +62,7 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
 
                 $searchName = substr($file->getFilename(), 0,-4);
 
+                // @todo put elastica logic in a service
                 $fieldQuery = new Match();
                 $fieldQuery->setFieldQuery('title', $searchName);
                 $pagination = $elasticaFinder->findPaginated($fieldQuery);
@@ -70,24 +72,52 @@ class HentaiScanLocalCommand extends ContainerAwareCommand
                     $filteredName = str_replace(['?','|', '\'','"','~'],' ', $result->getTitle());
 
                     if($searchName == $filteredName) {
-                        $match = true;
-                        if($zipInfo['files'] == $results->getFileCount()) {
-                            $io->success(sprintf('100%% match on %s', $result->getTitle()));
+                        if($zipInfo['files'] == $result->getFileCount()) {
+                            if($zipInfo['contsize'] == $result->getFilesize()) {
+                                $match = true;
+                                $hit++;
+                                $io->success(sprintf('100%% match on %s', $result->getTitle()));
+                                break; // Exit out of loop since we're done here.
+                            } else {
+                                $sizemiss++;
+                                $io->note(sprintf(
+                                    'Name match but filesize mismatch on %s. %d - %d',
+                                    $result->getTitle(),
+                                    $zipInfo['contsize'],
+                                    $result->getFilesize()
+                                ));
+                            }
                         } else {
-                            $io->note(sprintf('Name match but imagecount mismatch on %s', $result->getTitle()));
+                            $countmiss++;
+                            $io->note(sprintf(
+                                'Name match but imagecount mismatch on %s. %d - %d',
+                                $result->getTitle(),
+                                $zipInfo['files'],
+                                $result->getFileCount()
+                            ));
                         }
                     }
                 }
 
                 if(!$match) {
-                    $io->note(sprintf('No match for %s', $searchName));
+                    $filemiss++;
                 }
 
                 unset($results, $pagination, $fieldQuery);
             }
+
+            $io->note(sprintf(
+                "HIT: %d FILEMISS: %d COUNTMISS: %d SIZEMISS: %d",
+                $hit,
+                $filemiss,
+                $countmiss,
+                $sizemiss
+            ));
+            $io->success(sprintf('Finished scanning local files. Found %d files of which %d were matches', $finder->count(), $hit));
+        } else {
+            $io->error('Directory not found or readable');
         }
 
-        $io->success('You have a new command! Now make it your own! Pass --help to see your options.');
     }
 
     private function getZipInfo(SplFileInfo $fileInfo)
