@@ -136,7 +136,7 @@ class ExHentaiBrowserService
             }
         }
 
-        return str_replace(':','%253A', $tag);
+        return str_replace(':','%3A', $tag);
     }
 
     public function getByTag(string $tag, int $page = null)
