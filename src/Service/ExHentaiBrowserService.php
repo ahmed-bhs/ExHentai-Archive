@@ -136,7 +136,7 @@ class ExHentaiBrowserService
             }
         }
 
-        return str_replace(':','%3A', $tag);
+        return str_replace(':','%253A', $tag);
     }
 
     public function getByTag(string $tag, int $page = null)
@@ -243,7 +243,34 @@ class ExHentaiBrowserService
 
     }
 
-    public function downloadGallery()
+    public function downloadGallery($method = 'zip')
+    {
+        switch ($method) {
+            case 'zip':
+                return $this->downloadGalleryZip();
+                break;
+            case 'scrape':
+                return $this->downloadGalleryScrape();
+                break;
+            case 'hath':
+                return $this->downloadGalleryHath();
+                break;
+            default:
+                throw new \Exception('download method not supported');
+        }
+    }
+
+    public function downloadGalleryZip()
+    {
+
+    }
+
+    public function downloadGalleryScrape()
+    {
+
+    }
+
+    public function downloadGalleryHath()
     {
 
     }
