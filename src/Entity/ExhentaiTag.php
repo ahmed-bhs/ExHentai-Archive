@@ -5,6 +5,7 @@ namespace App\Entity;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JMS\Serializer\Annotation as Serializer;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\ExhentaiTagRepository")
@@ -31,6 +32,7 @@ class ExhentaiTag
 
     /**
      * @ORM\ManyToMany(targetEntity="App\Entity\ExhentaiGallery", mappedBy="Tags")
+     * @Serializer\Exclude()
      */
     private $Galleries;
 

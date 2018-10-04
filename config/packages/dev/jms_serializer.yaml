@@ -1,0 +1,5 @@
+jms_serializer:
+    visitors:
+        json:
+            options:
+                - JSON_UNESCAPED_SLASHES
