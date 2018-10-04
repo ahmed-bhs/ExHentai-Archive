@@ -298,8 +298,6 @@ class ExHentaiBrowserServiceTest extends TestCase
         $this->client->expects($this->at(0))
             ->method('request')
             ->with(
-                $this->stringContains('GET'),
-                $this->stringContains($uri, false),
                 $this->anything()
             )
             ->willReturn(new Response(200,[],$html));
