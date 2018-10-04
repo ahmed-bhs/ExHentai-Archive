@@ -126,7 +126,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willSearchForTags()
     {
-        $this->createOverviewTest('female%253Amilf', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%3Amilf', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -153,7 +153,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willSearchForTagsWithSpacesInTagName()
     {
-        $this->createOverviewTest('female%253A"big breasts$"', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%3A"big breasts$"', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -193,7 +193,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willUseTagAsSearchIfSearchRemoteIsCalledWithATagQuery()
     {
-        $this->createOverviewTest('female%253Amilf$', file_get_contents(__DIR__ . '/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%3Amilf$', file_get_contents(__DIR__ . '/../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
