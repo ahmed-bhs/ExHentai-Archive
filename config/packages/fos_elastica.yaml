@@ -16,12 +16,16 @@ fos_elastica:
                             type: object
                             properties:
                                 title: ~
-                        posted: ~
+                        posted:
+                            type: date
+                            store: true
                         uploader: ~
                         fileCount: ~
                         rating: ~
                         torrentCount: ~
-                        lastAudit: ~
+                        lastAudit:
+                            type: date
+                            store: true
                         tags:
                             type: "nested"
                             properties:

@@ -8,6 +8,8 @@ use App\Entity\ExhentaiGallery;
 use App\Entity\ExhentaiTag;
 use App\Entity\ExhentaiTagNamespace;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\ORM\Tools\Pagination\Paginator;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 
 /**
@@ -90,6 +92,21 @@ class ExhentaiGalleryRepository extends ExHentaiRepository
         $this->_em->flush();
 
         return $gallery;
+    }
+
+    public function findAllPaginated($page = 1, $limit = 20)
+    {
+        return $this->paginate($this->createQueryBuilder('e')->orderBy('e.Posted'), $page, $limit);
+    }
+
+    public function paginate(QueryBuilder $builder, $page = 1, $limit = 20)
+    {
+        $paginator = new Paginator($builder);
+        $paginator->setUseOutputWalkers(false);
+
+        $paginator->getQuery()
+            ->setFirstResult($limit*($page-1))
+            ->setMaxResults($limit);
     }
 
 //    /**
