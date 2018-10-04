@@ -3,11 +3,13 @@ namespace App\Tests\Service;
 
 use App\Entity\ExhentaiGallery;
 use App\Service\ExHentaiBrowserService;
+use Doctrine\ORM\EntityManager;
 use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 
 class ExHentaiBrowserServiceTest extends TestCase
 {
@@ -23,12 +25,28 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     private $browser;
 
+    /**
+     * @var MockObject|EntityManager
+     */
+    private $entityManager;
+
+    /**
+     * @var MockObject|LoggerInterface
+     */
+    private $logger;
+
     protected function setUp()
     {
         $this->client = $this->getMockBuilder(ClientInterface::class)
             ->disableOriginalConstructor()->getMock();
 
-        $this->browser = new ExHentaiBrowserService('passhash',123);
+        $this->entityManager = $entitymanager = $this->getMockBuilder(EntityManager::class)
+            ->disableOriginalConstructor()->getMock();
+
+        $this->logger = $logger = $this->getMockBuilder(LoggerInterface::class)
+            ->disableOriginalConstructor()->getMock();
+
+        $this->browser = new ExHentaiBrowserService('passhash',123, $entitymanager, $logger);
         $this->browser->setClient($this->client);
         $this->browser->rateLimiterEnabled = false;
 
@@ -52,6 +70,13 @@ class ExHentaiBrowserServiceTest extends TestCase
     {
         $this->createOverviewTest('/',file_get_contents(__DIR__.'/../stubs/e-hentai-index-list.html'));
 
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
+
         $result = $this->browser->getIndex();
 
         $this->assertTrue(is_array($result));
@@ -64,6 +89,13 @@ class ExHentaiBrowserServiceTest extends TestCase
     public function willGetGalleriesFromThumbnailViewIndex()
     {
         $this->createOverviewTest('/',file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
 
         $result = $this->browser->getIndex();
 
@@ -96,6 +128,20 @@ class ExHentaiBrowserServiceTest extends TestCase
     {
         $this->createOverviewTest('female%253Amilf', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
 
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
+
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
+
         $result = $this->browser->getByTag('female:milf');
 
         $this->assertTrue(is_array($result));
@@ -107,7 +153,14 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willSearchForTagsWithSpacesInTagName()
     {
-        $this->createOverviewTest('female%253A%22big+breasts%24%22', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%253A"big breasts$"', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
 
         $result = $this->browser->getByTag('female:big breasts');
 
@@ -122,6 +175,13 @@ class ExHentaiBrowserServiceTest extends TestCase
     {
         $this->createOverviewTest('test', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
 
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
+
         $result = $this->browser->searchRemote('test');
 
         $this->assertTrue(is_array($result));
@@ -133,7 +193,14 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willUseTagAsSearchIfSearchRemoteIsCalledWithATagQuery()
     {
-        $this->createOverviewTest('female%253Amilf%24', file_get_contents(__DIR__ . '/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%253Amilf$', file_get_contents(__DIR__ . '/../stubs/e-hentai-index-thumbs.html'));
+
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
 
         $result = $this->browser->searchRemote('female:milf');
 
@@ -154,6 +221,13 @@ class ExHentaiBrowserServiceTest extends TestCase
                 $this->anything()
             )
             ->willReturn(new Response(200, [], self::API_GALLERY_RESPONSE_SUCCESS));
+
+        $this->entityManager->expects($this->once())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
 
         $result = $this->browser->getGallery(1, 'abc');
 
@@ -199,7 +273,7 @@ class ExHentaiBrowserServiceTest extends TestCase
 
     public function testConstruct()
     {
-        $browser = new ExHentaiBrowserService('passwordhash', 39);
+        $browser = new ExHentaiBrowserService('passwordhash', 39, $this->entityManager, $this->logger);
 
         $cookieJar = $browser->getCookieJar();
 

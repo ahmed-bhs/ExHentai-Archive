@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Model\GalleryPage;
 use App\Service\ExHentaiBrowserService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -43,7 +44,7 @@ class ExhentaiDailyBonusCommand extends Command
         $success = false;
         $data = [];
 
-        for($i=0; $i<2;$i++) {
+        for($i=0; $i<3;$i++) {
             $galleryHtml = $this->browserService->get(sprintf(
                 '%sg/%s/%s/',
                 ExHentaiBrowserService::SAFE_URL,
@@ -51,23 +52,22 @@ class ExhentaiDailyBonusCommand extends Command
                 $galleries[$i]->getToken()
             ));
 
-            if (preg_match(
-                '~<div\sid=\"eventpane\"(?:[^>]*?)><p(?:[^>]*?)>It is the dawn of a new day!</p>.*?<strong>([0-9,]+)</strong> EXP, <strong>([0-9,]+)</strong> Credits, <strong>([0-9,]+)</strong> GP and <strong>([0-9,]+)</strong> Hath~',
-                $galleryHtml,
-                $matches
-            )) {
-                $success = true;
-                $data = $matches;
+            $gallery = GalleryPage::fromHtml($galleryHtml);
+
+            $success = $gallery->hasDailyBonus();
+            if($success) {
+                $data = $gallery->dailyBonus;
+                continue;
             }
         }
 
         if($success) {
             $io->success(sprintf(
                 'Collected %d EXP, %d Credits, %d GP and %d Hath',
-                $data[1],
-                $data[2],
-                $data[3],
-                $data[4]
+                $data['experience'],
+                $data['credits'],
+                $data['gp'],
+                $data['hath']
             ));
             return 0;
         } else {
