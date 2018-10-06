@@ -1,6 +1,7 @@
 <?php
 namespace App\Tests\Service;
 
+use App\Entity\ExhentaiArchiverKey;
 use App\Entity\ExhentaiGallery;
 use App\Service\ExHentaiBrowserService;
 use Doctrine\ORM\EntityManager;
@@ -143,6 +144,97 @@ class ExHentaiBrowserServiceTest extends TestCase
             ->willReturn(new ExhentaiGallery());
 
         $result = $this->browser->getByTag('female:milf');
+
+        $this->assertTrue(is_array($result));
+        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
+    }
+
+    /**
+     * @test
+     */
+    public function willDownloadGalleryAsZip()
+    {
+        $gallery = (new ExhentaiGallery())
+            ->setId(1)
+            ->setToken('abc123')
+            ->setArchiverKey((new ExhentaiArchiverKey('test')));
+
+        $this->setSuccesfullZipDownloadExpects();
+
+        $this->browser->downloadGallery($gallery);
+    }
+
+    /**
+     * @test
+     */
+    public function downloadWillUpdateArchiveTokenIfExpired()
+    {
+        $gallery = (new ExhentaiGallery())
+            ->setId(1)
+            ->setToken('abc123')
+            ->setArchiverKey((new ExhentaiArchiverKey('test'))->setTime(new \DateTime('-2 days')));
+
+        $jsonResponse = "{\"gmetadata\":[{\"gid\":1,\"token\":\"a\",\"archiver_key\":\"test\",\"title\":\"meh\",\"title_jpn\":\"meh\",\"category\":\"Doujinshi\",\"thumb\":\"https:\/\/ehgt.org\/6b\/8d\/6b8d-1-1480-2093-png_l.jpg\",\"uploader\":\"username\",\"posted\":\"1538769279\",\"filecount\":\"35\",\"filesize\":2,\"expunged\":false,\"rating\":\"4.23\",\"torrentcount\":\"1\",\"tags\":[\"language:english\",\"language:translated\"]}]}";
+
+        $this->client->expects($this->at(0))
+            ->method('request')
+            ->with(
+                $this->equalTo('POST')
+            )
+            ->willReturn(
+                new Response(
+                    200,
+                    [],
+                    $jsonResponse
+                ));
+
+        $this->entityManager->expects($this->once())
+            ->method('getRepository')
+            ->with($this->equalTo(ExhentaiGallery::class))
+            ->willReturn($gallery);
+
+        $this->setSuccesfullZipDownloadExpects(1);
+
+        $this->browser->downloadGallery($gallery);
+
+        $this->assertTrue($gallery->getArchiverKey()->getTime() > new \DateTime('-1 day'));
+    }
+
+    /**
+     * @test
+     */
+    public function willSearch()
+    {
+        $this->createOverviewTest('test', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
+
+        $result = $this->browser->search('test');
+
+        $this->assertTrue(is_array($result));
+        $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
+    }
+
+    /**
+     * @test
+     */
+    public function willSearchTagIfTagIsGivenToSearch()
+    {
+        $this->createOverviewTest('female%3A"big breasts$"', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+
+        $this->entityManager->expects($this->any())
+            ->method('getRepository')
+            ->with(
+                $this->stringContains(ExhentaiGallery::class)
+            )
+            ->willReturn(new ExhentaiGallery());
+
+        $result = $this->browser->search('female:big breasts');
 
         $this->assertTrue(is_array($result));
         $this->assertInstanceOf(ExhentaiGallery::class, $result[0]);
@@ -314,5 +406,49 @@ class ExHentaiBrowserServiceTest extends TestCase
                 )
                 ->willReturn(new Response(200, [], self::API_GALLERY_RESPONSE_SUCCESS));
         }
+    }
+
+    private function setSuccesfullZipDownloadExpects($offset = 0)
+    {
+
+
+        $this->client->expects($this->at($offset))
+            ->method('request')
+            ->with(
+                $this->equalTo('GET'),
+                $this->stringContains('archiver.php?gid=1&token=abc123&or=test')
+            )
+            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../stubs/download-gallery/step-1.html')));
+
+        $this->client->expects($this->at($offset+1))
+            ->method('request')
+            ->with(
+                $this->equalTo('POST'),
+                $this->stringContains('archiver.php?gid=1&token=abc123&or=test'),
+                $this->identicalTo([
+                    'form_params' => [
+                        'dltype'  => 'org',
+                        'dlcheck' => 'Download Original Archive'
+                    ]
+                ])
+            )
+            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../stubs/download-gallery/step-2.html')));
+
+        $this->client->expects($this->at($offset+2))
+            ->method('request')
+            ->with(
+                $this->equalTo('GET'),
+                $this->stringStartsWith('http://0.0.0.0/archive/1/1cf33f5ef9ed1fc1bf958ae7ecdff04546b088ad/58w6ctf95t9/0')
+            )
+            ->willReturn(new Response(200, ['host' => "0.0.0.0"], file_get_contents(__DIR__.'/../stubs/download-gallery/step-3.html')));
+
+        $this->client->expects($this->at($offset+3))
+            ->method('request')
+            ->with(
+                $this->equalTo('GET'),
+                $this->equalTo('http://0.0.0.0/archive/1/1cf33f5ef9ed1fc1bf958ae7ecdff04546b088ad/58w6ctf95t9/0?start=1'),
+                $this->arrayHasKey('save_to')
+            )
+            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../stubs/download-gallery/step-3.html')));
     }
 }

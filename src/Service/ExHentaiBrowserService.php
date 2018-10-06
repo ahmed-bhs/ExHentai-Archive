@@ -11,8 +11,10 @@ use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\RequestOptions;
+use GuzzleHttp\TransferStats;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\DomCrawler\Crawler;
 
 class ExHentaiBrowserService
 {
@@ -47,6 +49,11 @@ class ExHentaiBrowserService
      * @var \DateTimeInterface
      */
     private $lastRequest;
+
+    /**
+     * @var ResponseInterface
+     */
+    private $lastResponse;
 
     /**
      * @var int
@@ -243,34 +250,97 @@ class ExHentaiBrowserService
 
     }
 
-    public function downloadGallery($method = 'zip')
+    public function downloadGallery(ExhentaiGallery $gallery, $method = 'zip')
     {
         switch ($method) {
             case 'zip':
-                return $this->downloadGalleryZip();
+                return $this->downloadGalleryZip($gallery);
                 break;
             case 'scrape':
-                return $this->downloadGalleryScrape();
+                return $this->downloadGalleryScrape($gallery);
                 break;
             case 'hath':
-                return $this->downloadGalleryHath();
+                return $this->downloadGalleryHath($gallery);
                 break;
             default:
                 throw new \Exception('download method not supported');
         }
     }
 
-    public function downloadGalleryZip()
+    public function downloadGalleryZip(ExhentaiGallery $gallery, $resampled = false)
+    {
+        if($gallery->getArchiverKey()->getTime() < new \DateTime('-24 hours')) {
+            // Renew Archiver key
+            $newGallery = $this->getGallery($gallery->getId(), $gallery->getToken());
+            $gallery->setArchiverKey($newGallery->getArchiverKey());
+        }
+
+        $archiverPageHtml = $this->get('archiver.php', [
+            'gid'   => $gallery->getId(),
+            'token' => $gallery->getToken(),
+            'or'    => $gallery->getArchiverKey()->getToken()
+        ]);
+
+        $formOffset = ($resampled === true) ? 0 : 1;
+
+        $crawler = new Crawler($archiverPageHtml);
+        $formNode = $crawler->filterXPath("//div[1]/div/div[{$formOffset}]/form");
+
+        if($formNode->count()) {
+            $downloadQueueHtml = $this->request('POST', $formNode->filter('form')->attr('action'), [
+                'form_params' => [
+                    'dltype'  => $formNode->filterXPath('//input[@name="dltype"]')->attr('value'),
+                    'dlcheck' => $formNode->filterXPath('//div/input[@name="dlcheck"]')->attr('value')
+                ]
+            ])->getBody()->getContents();
+
+            $crawler = new Crawler($downloadQueueHtml);
+            if(strpos($crawler->text(), "Locating archive server") !== FALSE) {
+                // Gallery is being archived
+                $attempt = 0;
+                $downloadSucces = false;
+                while (!$downloadSucces) {
+                    // This can take a while depending on gallery size and popularity
+                    $url = null;
+                    $crawler = new Crawler(
+                        $this->get(
+                            $crawler->filterXPath('//p[@id="continue"]/a')->attr('href'),
+                            [
+                                'on_stats' => function (TransferStats $stats) use (&$url) {
+                                    $url = $stats->getEffectiveUri();
+                                }
+                            ]
+                        )
+                    );
+
+                    $downloadUri = sprintf("http://%s%s", current($this->lastResponse->getHeader('host')), $crawler->filterXPath('//a')->attr('href'));
+                    if(strpos($downloadUri, 'start=1') !== FALSE) {
+                        $this->request('GET', $downloadUri, ['save_to' => '']);
+
+                        if(substr($this->lastResponse->getStatusCode(),0,1) == 2) {
+                            $downloadSucces = true;
+                        }
+                    }
+                    // Sleep if we have to rety (it says so in the embedded javascript ;))
+                    sleep(1);
+                    $attempt++;
+                    if($attempt >= 20) {
+                        throw Exception('Unable to download archive as zip. Failed after 20 attempts');
+                    }
+                }
+            }
+        } else {
+            // @todo add support for galleries already downloaded
+            throw new \Exception('Download form not found');
+        }
+    }
+
+    public function downloadGalleryScrape(ExhentaiGallery $gallery)
     {
 
     }
 
-    public function downloadGalleryScrape()
-    {
-
-    }
-
-    public function downloadGalleryHath()
+    public function downloadGalleryHath(ExhentaiGallery $gallery)
     {
 
     }
@@ -317,7 +387,9 @@ class ExHentaiBrowserService
             $this->requestCounter = 0;
         }
 
-        return $this->client->request($method, $uri, $parameters);
+        $this->lastResponse = $this->client->request($method, $uri, $parameters);
+
+        return $this->lastResponse;
     }
 
 

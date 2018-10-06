@@ -13,7 +13,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 
 class ExhentaiApiGalleryCommand extends ContainerAwareCommand
 {
-    protected static $defaultName = 'hentai:api:gallery';
+    public static $defaultName = 'hentai:api:gallery';
 
     protected $browser;
 
@@ -44,9 +44,11 @@ class ExhentaiApiGalleryCommand extends ContainerAwareCommand
                 $galleries = $this->browser->getIndex();
             }
 
-            /** @var ExhentaiGallery $gallery */
-            foreach ($galleries as $gallery) {
-                $io->note(sprintf('Category: %s | Name: %s', $gallery->getCategory()->getTitle(), $gallery->getTitle()));
+            if(is_array($galleries)) {
+                /** @var ExhentaiGallery $gallery */
+                foreach ($galleries as $gallery) {
+                    $io->note(sprintf('Category: %s | Name: %s', $gallery->getCategory()->getTitle(), $gallery->getTitle()));
+                }
             }
 
             $io->success(sprintf('Complete with %d results', count($galleries)));
@@ -64,6 +66,8 @@ class ExhentaiApiGalleryCommand extends ContainerAwareCommand
                     ));
                 }
             }
+
+            return 1;
         }
     }
 }

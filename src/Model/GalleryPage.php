@@ -2,6 +2,7 @@
 namespace App\Model;
 
 use App\Entity\ExhentaiGallery;
+use App\Service\ExHentaiBrowserService;
 use Symfony\Component\DomCrawler\Crawler;
 
 class GalleryPage extends ExhentaiGallery
@@ -45,7 +46,6 @@ class GalleryPage extends ExhentaiGallery
 
         $model->setTitle($document->filterXPath("//h1[@id='gn']")->text());
         $model->setTitleJapan($document->filterXPath("//h1[@id='gj']")->text());
-
 
         $eventpaneNode = $document->filterXPath("//div[@id='eventpane']");
         // Check if the page contains an eventpane (hentaiverse event or daily bonus)
