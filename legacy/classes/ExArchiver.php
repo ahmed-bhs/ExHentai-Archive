@@ -124,7 +124,7 @@ class ExArchiver
             }
         }
     }
-    
+
     protected function archiveGallery($gallery)
     {
         Log::debug(self::LOG_TAG, 'Archiving gallery: #%d', $gallery->exhenid);

@@ -4,23 +4,23 @@
 | Task | Priority | Difficulty | Target version | Progress |
 |------|:---------:|:----------:|:---------------|:--------:|
 |Write fallback controller for legacy routes|High|Easy|v0.1|100%|
-|Automated testing<sup>[1](#fn1)</sup>|Medium|Hard|v0.2|1%|
-|Migrate Commands|Medium|Misc|v0.2|0%|
+|Automated testing<sup>[1](#fn1)</sup>|Medium|Hard|v0.2|10%|
+|Migrate Commands|Medium|Misc|v0.2|10%|
 |Migrate API|Low|Misc|v0.2|10%|
-|Recreate ExClient in new codebase|High|Moderate|v0.1|30%
+|Recreate ExClient in new codebase|High|Moderate|v0.1|50%|
 |DailyBonus command<sup>[2](#fn2)</sup> |Medium|Easy|v0.2|100%|
 |Add support for workers<sup>[3](#fn3)</sup>|Medium|Unknown|vX.X|0%|
 |Redis support<sup>[4](#fn4)</sup>|Medium|Moderate|v0.3|0%|
-|Replace Sphinx search with ElasticSearch<sup>[5](#fn5)</sup>|Medium|Moderate|vX.X|0%|
+|Replace Sphinx search with ElasticSearch<sup>[5](#fn5)</sup>|Medium|Moderate|vX.X|30%|
 
 #### ExClient progress
 | Feature | Scope | Target version | Code coverage | Progress | Note |
 |---------|:-----:|:---------------|:-------------:|:--------:|:-----|
-|Authentication<sup>[6](#fn6)</sup>|Global|v0.1|0%|50%|Login with username/password is lacking|
-|Index|Gallery|v0.1|0%|100%|Works in both list and thumbnail view|
-|Search|Gallery|v0.1|0%|80%-100%|Work AFAIK. Needs tests for all use cases|
-|Get Gallery|Gallery|v0.1|0%|100%|Uses API|
-|Download Gallery|Gallery|v0.1|0%|0%|Should get file and stream output|
+|Authentication<sup>[6](#fn6)</sup>|Global|v0.1|80%|50%|Login with username/password is lacking|
+|Index|Gallery|v0.1|100%|100%|Works in both list and thumbnail view|
+|Search|Gallery|v0.1|80%|80%-100%|Needs extra logic for (multiple tags)|
+|Get Gallery|Gallery|v0.1|100%|100%|Uses API|
+|Download Gallery|Gallery|v0.1|33%|33%|ZIP works. Should get file and stream output|
 
 #### Migrations
 | Component | Code coverage | Progress | Comment |
