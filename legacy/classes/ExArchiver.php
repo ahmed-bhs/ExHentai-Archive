@@ -124,7 +124,7 @@ class ExArchiver
             }
         }
     }
-
+    
     protected function archiveGallery($gallery)
     {
         Log::debug(self::LOG_TAG, 'Archiving gallery: #%d', $gallery->exhenid);
@@ -136,7 +136,7 @@ class ExArchiver
             Log::error(self::LOG_TAG, 'Failed to retrieve page from server');
             return;
         }
-        
+
         $galleryPage = new ExPage_Gallery($galleryHtml);
 
         // save html
@@ -165,6 +165,35 @@ class ExArchiver
                 //delete if gallery zip exists (it shouldn't)
                 $targetFile = $gallery->getArchiveFilepath();
                 if (file_exists($targetFile)) {
+                    // Check if local gallery zip is healthy and up to date
+                    $zipArchive = new ZipArchive();
+                    $res = $zipArchive->open($targetFile);
+                    if($res !== true) {
+                        switch($res) {
+                            case ZipArchive::ER_NOZIP:
+                                Log::debug(self::LOG_TAG, 'Existing archive not a zip');
+                            case ZipArchive::ER_INCONS :
+                                Log::debug(self::LOG_TAG, 'Existing archive inconsistent');
+                            case ZipArchive::ER_CRC :
+                                Log::debug(self::LOG_TAG, 'Existing archive CRC check failed');
+                            default:
+                                Log::debug(self::LOG_TAG, 'Existing archive failed to open. Unknown error');
+                        }
+                    } else {
+                        // Zip is consistent
+                        // Compare filecount
+                        $zipInfo = $this->getZipInfo($zipArchive);
+                        if($zipInfo['files'] == $gallery->getNumFiles()) {
+                            if($zipInfo['contsize'] == $gallery->getFilesize()) {
+                                // 100% match. No need to download
+                                Log::debug(self::LOG_TAG, 'Existing archive matches gallery, skipping download');
+                                $gallery->archived = true;
+                                R::store($gallery);
+                                return;
+                            }
+                        }
+                    }
+
                     unlink($targetFile);
                 }
 
@@ -250,5 +279,25 @@ class ExArchiver
         }
 
         R::store($gallery);
+    }
+
+    private function getZipInfo(ZipArchive $zipArchive)
+    {
+        $contentSize = 0;
+        $compSize = 0;
+        for($i=0;$i<=$zipArchive->numFiles;$i++)
+        {
+            $stat = $zipArchive->statIndex($i);
+            $contentSize = $contentSize + $stat['size'];
+            $compSize    = $compSize + $stat['comp_size'];
+        }
+
+        $return = [
+            'files'    => $zipArchive->numFiles,
+            'contsize' => $contentSize, // THIS VALUE SHOULD MATCH WITH API
+            'compsize' => $compSize,
+        ];
+
+        return $return;
     }
 }
