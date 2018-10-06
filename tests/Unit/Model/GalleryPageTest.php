@@ -18,7 +18,7 @@ class GalleryPageTest extends TestCase
      */
     public function willReturnFalseOnHasEventIfNoEventPaneIsShown()
     {
-        $galleryModel = GalleryPage::fromhtml(file_get_contents(__DIR__.'/../stubs/gallery-single.html'));
+        $galleryModel = GalleryPage::fromhtml(file_get_contents(__DIR__.'/../../stubs/gallery-single.html'));
 
         $this->assertFalse($galleryModel->hasEvent());
         $this->assertFalse($galleryModel->hasHentaiVerseChallenge());
@@ -30,7 +30,7 @@ class GalleryPageTest extends TestCase
      */
     public function willDetectIfPageHasHentaiVerseEvent()
     {
-        $galleryModel = GalleryPage::fromhtml(file_get_contents(__DIR__.'/../stubs/gallery-single-hentaiverse-challenge.html'));
+        $galleryModel = GalleryPage::fromhtml(file_get_contents(__DIR__.'/../../stubs/gallery-single-hentaiverse-challenge.html'));
 
         $this->assertTrue($galleryModel->hasEvent());
         $this->assertTrue($galleryModel->hasHentaiVerseChallenge());
@@ -42,7 +42,7 @@ class GalleryPageTest extends TestCase
      */
     public function willDetectIfPageHasDailyBonus()
     {
-        $galleryModel = GalleryPage::fromhtml(file_get_contents(__DIR__.'/../stubs/gallery-single-dawn-of-new-day.html'));
+        $galleryModel = GalleryPage::fromhtml(file_get_contents(__DIR__.'/../../stubs/gallery-single-dawn-of-new-day.html'));
 
         $this->assertTrue($galleryModel->hasEvent());
         $this->assertTrue($galleryModel->hasDailyBonus());
@@ -55,7 +55,7 @@ class GalleryPageTest extends TestCase
 
     public function testFromHtml()
     {
-        $gallery = GalleryPage::fromHtml(file_get_contents(__DIR__.'/../stubs/gallery-single.html'));
+        $gallery = GalleryPage::fromHtml(file_get_contents(__DIR__.'/../../stubs/gallery-single.html'));
 
         $this->assertSame('(C73) [PAM Kikakushitsu (Tamura Chii)] Heart Full (Kodomo no Jikan)', $gallery->getTitle());
         $this->assertSame('(C73) [PAM★企画室 (田村ちい)] はあと☆ふる (こどものじかん)', $gallery->getTitleJapan());

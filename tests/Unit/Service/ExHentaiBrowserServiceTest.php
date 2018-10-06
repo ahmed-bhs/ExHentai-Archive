@@ -69,7 +69,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willGetGalleriesFromListIndex()
     {
-        $this->createOverviewTest('/',file_get_contents(__DIR__.'/../stubs/e-hentai-index-list.html'));
+        $this->createOverviewTest('/',file_get_contents(__DIR__.'/../../stubs/e-hentai-index-list.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -89,7 +89,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willGetGalleriesFromThumbnailViewIndex()
     {
-        $this->createOverviewTest('/',file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('/',file_get_contents(__DIR__.'/../../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -127,7 +127,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willSearchForTags()
     {
-        $this->createOverviewTest('female%3Amilf', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%3Amilf', file_get_contents(__DIR__.'/../../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -205,7 +205,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willSearch()
     {
-        $this->createOverviewTest('test', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('test', file_get_contents(__DIR__.'/../../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -225,7 +225,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willSearchTagIfTagIsGivenToSearch()
     {
-        $this->createOverviewTest('female%3A"big breasts$"', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%3A"big breasts$"', file_get_contents(__DIR__.'/../../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -245,7 +245,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willSearchForTagsWithSpacesInTagName()
     {
-        $this->createOverviewTest('female%3A"big breasts$"', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%3A"big breasts$"', file_get_contents(__DIR__.'/../../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -265,7 +265,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willSearchRemote()
     {
-        $this->createOverviewTest('test', file_get_contents(__DIR__.'/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('test', file_get_contents(__DIR__.'/../../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -285,7 +285,7 @@ class ExHentaiBrowserServiceTest extends TestCase
      */
     public function willUseTagAsSearchIfSearchRemoteIsCalledWithATagQuery()
     {
-        $this->createOverviewTest('female%3Amilf$', file_get_contents(__DIR__ . '/../stubs/e-hentai-index-thumbs.html'));
+        $this->createOverviewTest('female%3Amilf$', file_get_contents(__DIR__ . '/../../stubs/e-hentai-index-thumbs.html'));
 
         $this->entityManager->expects($this->any())
             ->method('getRepository')
@@ -418,7 +418,7 @@ class ExHentaiBrowserServiceTest extends TestCase
                 $this->equalTo('GET'),
                 $this->stringContains('archiver.php?gid=1&token=abc123&or=test')
             )
-            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../stubs/download-gallery/step-1.html')));
+            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../../stubs/download-gallery/step-1.html')));
 
         $this->client->expects($this->at($offset+1))
             ->method('request')
@@ -432,7 +432,7 @@ class ExHentaiBrowserServiceTest extends TestCase
                     ]
                 ])
             )
-            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../stubs/download-gallery/step-2.html')));
+            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../../stubs/download-gallery/step-2.html')));
 
         $this->client->expects($this->at($offset+2))
             ->method('request')
@@ -440,7 +440,7 @@ class ExHentaiBrowserServiceTest extends TestCase
                 $this->equalTo('GET'),
                 $this->stringStartsWith('http://0.0.0.0/archive/1/1cf33f5ef9ed1fc1bf958ae7ecdff04546b088ad/58w6ctf95t9/0')
             )
-            ->willReturn(new Response(200, ['host' => "0.0.0.0"], file_get_contents(__DIR__.'/../stubs/download-gallery/step-3.html')));
+            ->willReturn(new Response(200, ['host' => "0.0.0.0"], file_get_contents(__DIR__.'/../../stubs/download-gallery/step-3.html')));
 
         $this->client->expects($this->at($offset+3))
             ->method('request')
@@ -449,6 +449,6 @@ class ExHentaiBrowserServiceTest extends TestCase
                 $this->equalTo('http://0.0.0.0/archive/1/1cf33f5ef9ed1fc1bf958ae7ecdff04546b088ad/58w6ctf95t9/0?start=1'),
                 $this->arrayHasKey('save_to')
             )
-            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../stubs/download-gallery/step-3.html')));
+            ->willReturn(new Response(200, [], file_get_contents(__DIR__.'/../../stubs/download-gallery/step-3.html')));
     }
 }

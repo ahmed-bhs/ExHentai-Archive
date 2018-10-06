@@ -53,7 +53,7 @@ class ExhentaiDailyBonusCommandTest extends KernelTestCase
      */
     public function willReturnExitcode0IfSuccess()
     {
-        $this->setExpects(file_get_contents(__DIR__ . '/../stubs/gallery-single-dawn-of-new-day.html'));
+        $this->setExpects(file_get_contents(__DIR__ . '/../../stubs/gallery-single-dawn-of-new-day.html'));
 
         $this->commandTester->execute([
             'command' => 'exhentai:daily-bonus'
@@ -68,7 +68,7 @@ class ExhentaiDailyBonusCommandTest extends KernelTestCase
      */
     public function willReturnExitCode1IfHtmlContainsNoBonus()
     {
-        $this->setExpects(file_get_contents(__DIR__ . '/../stubs/gallery-single.html'));
+        $this->setExpects(file_get_contents(__DIR__ . '/../../stubs/gallery-single.html'));
 
         $this->commandTester->execute([
             'command' => 'exhentai:daily-bonus'
@@ -82,7 +82,7 @@ class ExhentaiDailyBonusCommandTest extends KernelTestCase
      */
     public function willReturnExitCode1IfHtmlContainsHentaiVerseInsteadOfChallenge()
     {
-        $this->setExpects(file_get_contents(__DIR__ . '/../stubs/gallery-single-hentaiverse-challenge.html'));
+        $this->setExpects(file_get_contents(__DIR__ . '/../../stubs/gallery-single-hentaiverse-challenge.html'));
 
         $this->commandTester->execute([
             'command' => 'exhentai:daily-bonus'
