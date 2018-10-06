@@ -1,0 +1,59 @@
+# Read the documentation: https://github.com/FriendsOfSymfony/FOSElasticaBundle/blob/master/Resources/doc/setup.md
+fos_elastica:
+    clients:
+        default: { host: search-exhentai-scraper-mpigqc6xgipeynfm4asstltq4y.eu-west-1.es.amazonaws.com, port: 80 }
+    indexes:
+        app:
+            index_name: app_%kernel.environment%
+            types:
+                gallery:
+                    properties:
+                        id: ~
+                        token: ~
+                        title: ~
+                        titleJapan: ~
+                        category:
+                            type: object
+                            properties:
+                                title: ~
+                        posted:
+                            type: date
+                            store: true
+                        uploader: ~
+                        fileCount: ~
+                        rating: ~
+                        torrentCount: ~
+                        lastAudit:
+                            type: date
+                            store: true
+                        tags:
+                            type: "nested"
+                            properties:
+                                name: ~
+                                namespace:
+                                    type: "object"
+                                    properties:
+                                        name: ~
+                    persistence:
+                        driver: orm
+                        model: App\Entity\ExhentaiGallery
+                        provider: ~
+                        finder: ~
+                tag:
+                    properties:
+                        name: ~
+                        namespace:
+                            type: "object"
+                            properties:
+                                name: ~
+                        galleries:
+                            type: "nested"
+                            properties:
+                                id: ~
+                                title: ~
+                                titleJapan: ~
+                    persistence:
+                        driver: orm
+                        model: App\Entity\ExhentaiTag
+                        provider: ~
+                        finder: ~

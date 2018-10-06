@@ -24,6 +24,8 @@ services:
       DB_USER: appuser
       DB_PASS: userPass
       DB_NAME: exhen
+    ports:
+      - "80:80"
 
   mariadb:
     image: mariadb
@@ -59,3 +61,8 @@ services:
 
   memcache:
     image: memcached:alpine
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.5.3
+    environment:
+      - "discovery.type=single-node"

@@ -1,0 +1,13 @@
+#index:
+#    path: /
+#    controller: App\Controller\DefaultController::index
+
+index:
+  path: /
+  controller: App\Controller\LegacyController::index
+
+fallback:
+  path: /legacy/{path}
+  defaults: { _controller: App\Controller\LegacyController::fallback }
+  requirements:
+    path: .*

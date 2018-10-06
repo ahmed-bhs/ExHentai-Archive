@@ -69,10 +69,15 @@ COPY ./.manifest/ /
 COPY . /var/www/html
 WORKDIR /var/www/html
 
-RUN composer install --no-dev --optimize-autoloader \
-    && chmod +x init.d.sh
+RUN composer install --optimize-autoloader \
+    && chmod +x init.d.sh \
+    && chmod -R +x docker-entrypoint-init.d/*
 
-RUN rm -rf /var/www/html/www/images \
-    && ln -s /images/ /var/www/html/www/
+RUN rm -rf /var/www/html/public/images \
+    && ln -s /images/ /var/www/html/public/ \
+    && rm -rf /var/www/html/images/ \
+    && ln -s /images/ /var/www/html/ \
+    && rm -rf /var/www/html/legacy/www/images/ \
+    && ln -s /images/ /var/www/html/legacy/www
 
 CMD ["sh", "init.d.sh"]

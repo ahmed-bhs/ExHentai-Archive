@@ -17,5 +17,10 @@ if [ ! -f "/etc/periodic/hourly/thumbnails.sh" ]; then
   (crontab -l ; echo "0 5 * * * /etc/periodic/hourly/thumbnails.sh > /proc/1/fd/1 2>/proc/1/fd/2") | sort - | uniq - | crontab -
 fi
 
+if [ ! -f "/etc/periodic/hourly/daily-bonus.sh" ]; then
+  cp /var/www/html/.docker/config/app/cron/hourly/daily-bonus.sh /etc/periodic/hourly/daily-bonus.sh
+  chmod +x /etc/periodic/hourly/daily-bonus.sh
+  (crontab -l ; echo "0 5 * * * /etc/periodic/hourly/daily-bonus.sh > /proc/1/fd/1 2>/proc/1/fd/2") | sort - | uniq - | crontab -
+fi
 
 crond

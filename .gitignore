@@ -15,3 +15,20 @@ phpMyAdmin/
 .idea/
 docker-compose.override.yml
 /vendor/
+/build/
+
+
+###> symfony/framework-bundle ###
+/.env
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> symfony/phpunit-bridge ###
+.phpunit
+/phpunit.xml
+###< symfony/phpunit-bridge ###
+last-response.html
+*.php___jb_tmp___
+*.php___jb_old___

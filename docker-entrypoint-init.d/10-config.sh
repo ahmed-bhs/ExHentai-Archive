@@ -1,4 +1,5 @@
 #!/usr/bin/env sh
+cd legacy
 if [ -f "config.json.linux" ]; then
 echo "Updating config.json"
 
